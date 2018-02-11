@@ -1,0 +1,6 @@
+# .gitignore
+
+*.class
+*.exe
+*.[oa]
+temp/
