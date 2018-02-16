@@ -71,7 +71,6 @@ print(my_tuple)
 # dictionary #
 my_dict = {'cha': 'm', 'lee': 'w'}
 print(my_dict['cha'])
-"""
 
 # test #
 
@@ -83,3 +82,21 @@ print(my_num.real)
 print(my_num.imag)
 print(my_num.conjugate())
 print(abs(my_num))
+
+a = 3
+b = 4
+print(float(a)/b)
+print(a**b)
+print(float(a)//b)
+
+"""
+# string #
+
+print("Life is short")
+print('Life\n is short')
+print("""Life 
+is short""")
+print('''Life is short''')
+
+print("cha's favorite food is pizza")
+print('cha\'s favorite food is pizza')
