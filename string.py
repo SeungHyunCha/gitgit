@@ -15,3 +15,26 @@ num = 3
 str = 'five'
 formatting = "I eat %s or %d apples." %(str,num)
 print(formatting)
+
+#a = 'hobby'
+#b = 'python is best choice'
+#print(a.count('b'))
+#print(b.find('b'))
+#print(b.find('k'))
+
+my_join = "1"
+print(my_join.join('abced'))
+
+print(a.replace('Life', 'leg'))
+print(a.split())
+
+my_format = 'My name is %s ' % 'chacha'
+print(my_format)
+my_formatting = 'My name is {}' .format('chacha')
+print(my_formatting)
+
+# Docstring
+""" Docstring"""
+print('test_print')
+
+#print('test_print', end="coding") only possible in python 3.x
