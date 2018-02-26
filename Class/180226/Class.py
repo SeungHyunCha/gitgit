@@ -5,6 +5,7 @@ Created on 2018. 2. 26.
 '''
 
 class Calculator:
+<<<<<<< master
     def __init__(self, first, second):
         self.first = first
         self.second = second
@@ -38,5 +39,28 @@ print b.sum1(b.first, b.second)
 print b.pow1()
 print b.div1(b.first, b.second)
 #print a.sum1()
+=======
+    def setdate(self, first, second):
+        self.first = first
+        self.second = second
+    
+    def sum(self, first, second):
+        return first+second
+    
+    def mul(self, first, second):
+        return first*second
+    
+    def sub(self, first, second):
+        return first-second      
+    
+    def div(self, first, second):
+        return first/second
+
+a = Calculator()
+
+a.setdate(4,5)
+
+print a.sum(a.first,a.second)
+>>>>>>> 05c1015 Class & testing branch
 #print a.mul(a.first,a.second)
 
