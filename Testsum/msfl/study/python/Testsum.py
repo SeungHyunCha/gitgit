@@ -1,4 +1,4 @@
-def sum1(a,b):
+def suml(a,b):
     return a+b
 
 Mylist = [1,2,3,4]
@@ -9,4 +9,5 @@ for i in Mylist:
 for i in Mylist:
     result += i
 
-print result 
+print 'Sum is %d' % result 
+
