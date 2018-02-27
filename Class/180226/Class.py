@@ -5,19 +5,21 @@ Created on 2018. 2. 26.
 '''
 
 class Calculator:
+    count = 0
     def __init__(self, first, second):
         self.first = first
         self.second = second
+        Calculator.count += 1
 #    def setdate(self, first, second):
 #        self.first = first
 #        self.second = second    
-    def sum1(self, first, second):
+    def sum1(self):
         return self.first + self.second
-    def mul1(self, first, second):
+    def mul1(self):
         return self.first * self.second
-    def sub1(self, first, second):
+    def sub1(self):
         return self.first - self.second      
-    def div1(self, first, second):
+    def div1(self):
         if self.second == 0:
             return 0
         else:
@@ -29,14 +31,10 @@ class Morefunc(Calculator):
     
 a = Calculator(4,5)
 b = Morefunc(4,0)
-#a.setdate(4,5)
 
-print a.sum1(a.first, a.second)
-
-print b.sum1(b.first, b.second)
-#print b.sum1()
+print a.sum1()
+print b.sum1()
 print b.pow1()
-print b.div1(b.first, b.second)
-#print a.sum1()
-#print a.mul(a.first,a.second)
+print b.div1()
 
+print Calculator.count
