@@ -1,16 +1,106 @@
 <?xml version="1.0"?>
-<data>
-    <country name="Liechtenstein">
-        <rank>1</rank>
-        <year>2008</year>
-        <gdppc>141100</gdppc>
-        <neighbor name="Austria" direction="E"/>
-        <neighbor name="Switzerland" direction="W"/>
-    </country>
-    <country name="Singapore">
-        <rank>4</rank>
-        <year>2011</year>
-        <gdppc>59900</gdppc>
-        <neighbor name="Malaysia" direction="N"/>
-    </country>
-</data>
+<model>
+<class name="EUtranFrequency">
+			<description>This Managed Object contains information of a specific EUtran frequency.
+MO is created manually, and when executing action changeFrequency in MO ExternalEUtranCellFDD/TDD.
+MO is also created automatically at X2 link setup with neighbor eNB.
+
+The RDNs of these MOs are EUtranFrequency=&lt;number&gt;, for example EUtranFrequency=2586.
+RDN must match attribute arfcnValueEUtranDl. If it does not match, automatic creation of MO can fail, leading to X2 link setup failure with neighbor eNB.</description>
+			<attribute name="EUtranFrequencyId">
+				<description>The value component of the Relative Distinguished Name (RDN).
+</description>
+				<mandatory></mandatory>
+				<noNotification></noNotification>
+				<restricted></restricted>
+				<dataType>
+					<string></string>
+				</dataType>
+			</attribute>
+			<attribute name="reservedBy">
+				<description>Contains a list of MO instances that reserve this MO instance.
+</description>
+				<readOnly></readOnly>
+				<dataType>
+					<sequence>
+					<moRef name="ManagedObject"></moRef>
+						<minLength>0</minLength>
+					</sequence>
+				</dataType>
+			</attribute>
+			<attribute name="userLabel">
+				<description>Label for free use.
+</description>
+				<dataType>
+					<string>
+						<lengthRange>
+							<min>0</min>
+							<max>128</max>
+						</lengthRange>
+						<defaultValue/>
+					</string>
+				</dataType>
+			</attribute>
+			<attribute name="arfcnValueEUtranDl">
+				<description>ARFCN applicable for a downlink E-UTRA carrier frequency, as defined in 3GPP TS 36.104 for specified E-UTRA bands. For TDD this also indicates the ARFCN for uplink. Values that can be used depend on national operator specific frequency allocation as well as supported frequency band(s) of the equipment in the eNodeB. Must match EUtranFrequencyId.</description>
+				<mandatory></mandatory>
+				<noNotification></noNotification>
+				<restricted></restricted>
+				<dataType>
+					<long>
+						<range>
+							<min>0</min>
+							<max>17999</max>
+							<min>36000</min>
+							<max>262143</max>
+						</range>
+					</long>
+				</dataType>
+			</attribute>
+			<attribute name="additionalFreqBandList">
+				<description>A list of additional frequency bands the frequency belongs to. The list is automatically set by the eNB. The list does not include the frequency band indicated by the EARFCN value of the frequency (primary frequency band). These additional frequency bands are broadcasted to the UEs in SystemInformationBlockType5 in case the feature Multiple Frequency Band Indicators is enabled in the cell.</description>
+				<nonPersistent></nonPersistent>
+				<readOnly></readOnly>
+				<dataType>
+					<sequence>
+					<long>
+						<range>
+							<min>1</min>
+							<max>256</max>
+						</range>
+					</long>
+						<minLength>0</minLength>
+						<maxLength>8</maxLength>
+					</sequence>
+				</dataType>
+			</attribute>
+			<attribute name="excludeAdditionalFreqBandList">
+				<description>A list of frequency bands to be excluded from the list of additional frequency bands in the additionalFreqBandList MOM attribute. The list shall not include the frequency band indicated by the EARFCN value of the frequency (primary frequency band). These frequency bands are excluded from the list of broadcasted additional frequency bands in SystemInformationBlockType5 in case the feature Multiple Frequency Band Indicators is enabled in the cell.</description>
+				<dataType>
+					<sequence>
+					<long>
+						<range>
+							<min>1</min>
+							<max>256</max>
+						</range>
+					</long>
+						<minLength>0</minLength>
+						<maxLength>8</maxLength>
+					</sequence>
+				</dataType>
+			</attribute>
+			<attribute name="freqBand">
+				<description>The primary frequency band the frequency belongs to according to its defined EARFCN.</description>
+				<nonPersistent></nonPersistent>
+				<readOnly></readOnly>
+				<dataType>
+					<long>
+						<range>
+							<min>1</min>
+							<max>256</max>
+						</range>
+					</long>
+				</dataType>
+			</attribute>
+		</class>
+</model>
