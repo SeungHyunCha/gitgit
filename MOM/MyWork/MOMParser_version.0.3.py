@@ -9,28 +9,33 @@ class MomParser:
         for event, elem in ET.iterparse(name, events=('start','end')):
             #print elem.tag
             if event == 'start' and self.root == None:              
-                self.root = elem.tag                                                 
+                self.root = elem.tag                                                
                 #print self.root
             elif event == 'start':
                 if elem.tag == 'class':
                     #print elem.attrib.values()[0]
                     moName = elem.attrib.values()[0]
-                    mo = MO(moName)         
-                    for child in elem:
-                        #print child.tag
-                        if child.tag == 'description':
-                            mo.description = child.text
-                        else:
-                            pass
-                    print mo.__dict__
-                     
+                    mo = MO(moName)     
+                    print dir(mo)    
+                    for child in elem:                       
+                        #print 'child', child.tag
+                        #for cchild in child:
+                            #print 'child child', cchild.tag
+                        #    for ccchild in cchild:
+                                #print 'child child child', ccchild.tag
+                        if child.tag == 'description': mo.description = child.text
+                        else: pass
+                    #print mo.__dict__
                 elif elem.tag == 'attribute':
                     attrName = elem.attrib.values()[0]
                     attr = ATTR(attrName)
                           
-            else:
-                pass
-            
+                elif elem.tag == 'enum': pass
+                elif elem.tag == 'struct': pass
+                elif elem.tag == 'exception': pass
+                else: pass 
+            else: pass
+    
 '''
  temp = []
     for child in elem:
@@ -50,9 +55,12 @@ class MO:
         self.description = None
         self.parents = None
         self.child = None
-    
-    def __repr__(self):
-        return 
+    def __getitem__(self, k):
+        return self.name[k]
+    def __setitem__(self, k, v):
+        self.name[k] = v
+    def __len__(self):
+        return len(self.name)
     
 class ATTR:
     def __init__(self, name):
