@@ -12,7 +12,7 @@ class MomParser(object):
             elif event == 'start':
                 if elem.tag == 'class': # a class
                     moName = elem.attrib.values()[0] # name of the class
-                    mo = MO(moName) # create the obj of 'MO class'
+                    mo = MO(moName) # create the obj of MO
                 elif elem.tag == 'enum': pass
                 elif elem.tag == 'struct': pass
                 elif elem.tag == 'exception': pass
@@ -20,30 +20,52 @@ class MomParser(object):
             elif event == 'end':
                 if elem.tag == 'class': # a class
                     for mo_child in elem: # child of the class
-                        if mo_child.tag == 'attribute': # an attribute
+                        if mo_child.tag == 'attribute': # has an attribute
                             attrName = mo_child.attrib.values()[0] # name of the attribute
-                            attr = ATTR(attrName) # create the obj of 'ATTR class'
+                            attr = ATTR(attrName) # create the obj of attribute
                             for attr_child in mo_child: # child of the attribute 
-                                if len(attr_child._children) == 0: # Existence check of child 
-                                    if attr_child.text == None: exec "attr.%s = 'on'" % attr_child.tag # 
-                                    else: exec "attr.%s = %r" % (attr_child.tag, attr_child.text)
-                                else: 
+                                if attr_child._children == []: # if there is no child 
+                                    #print attr_child, attr_child._children
+                                    if attr_child.text == None: 
+                                        print 'None', attr_child.text, attr_child.attrib
+                                        exec "attr.%s = 'on'" % attr_child.tag # if there is text in child 
+                                    else: 
+                                        print 'OK', attr_child.text, attr_child.attrib
+                                        exec "attr.%s = %r" % (attr_child.tag, attr_child.text) # if there is no text in child
+                                else: # if there is any child
                                     for data_type_child in attr_child:
-                                        #print type(attr_child.tag)
-                                        #print type(data_type_child.tag)
-                                        exec "attr.%s = %r" % (attr_child.tag, data_type_child.tag) 
-                                        for range in data_type_child:
-                                            print range
+                                        #print data_type_child, data_type_child.attrib
+                                        if data_type_child.attrib == {}: # dataType
+                                            exec "attr.%s = %r" % (attr_child.tag, data_type_child.tag) 
+                                            #print attr_child.tag, data_type_child.tag
+                                            for range in data_type_child:
+                                                #print range
+                                                if len(range._children) == 0:
+                                                    pass#print 'nochild', range.tag, range.attrib, range.text
+                                                else:
+                                                    pass#print 'child', range.tag, range.attrib, range.text
+                                                    for range_child in range:
+                                                        pass
+                                                        #print range.tag, range_child.tag
+                                                        for child in range_child:
+                                                            pass
+                                                            #print child.tag, child.text
+                                        else: 
+                                            #print data_type_child.tag, data_type_child.attrib
+                                            exec "attr.%s = %r" % (data_type_child.tag, data_type_child.attrib)
+                                            for child in data_type_child:
+                                                #print child.tag, child.text
+                                                exec "attr.%s.update({%r:%r})" %(data_type_child.tag, child.tag, child.text)
                             attr.mo = moName # add name of mo in attr obj
                             mo.attribute.append(attr) # add name of attr in mo obj
-                            print 'Attribute', attr.__dict__
-                        else: # except attribute
+                            #print 'Attribute', attr.__dict__
+                        else: # other elements
                             if len(mo_child._children) == 0:
                                 if mo_child.text == None: exec("mo.%s = 'on'" % mo_child.tag)
                                 else: exec("mo.%s = %r" % (mo_child.tag, mo_child.text))
                             else:
                                 pass
-                    print 'MO', mo.__dict__
+                    #print 'MO', mo.__dict__
                 else: pass         
             else: pass
     
