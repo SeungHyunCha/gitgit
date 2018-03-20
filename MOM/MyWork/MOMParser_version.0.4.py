@@ -9,56 +9,51 @@ class MomParser(object):
             #print elem.tag
             if event == 'start' and self.root == None:              
                 self.root = elem.tag                                                
-                #print self.root
             elif event == 'start':
-                #print event, elem
-                if elem.tag == 'class':
-                    #print elem.attrib.values()[0]
-                    moName = elem.attrib.values()[0]
-                    mo = MO(moName)     
+                if elem.tag == 'class': # a class
+                    moName = elem.attrib.values()[0] # name of the class
+                    mo = MO(moName) # create the obj of 'MO class'
                 elif elem.tag == 'enum': pass
                 elif elem.tag == 'struct': pass
                 elif elem.tag == 'exception': pass
                 else: pass
             elif event == 'end':
-                if elem.tag == 'class':
-                    for mo_child in elem:
-                        if mo_child.tag == 'description': mo.description = mo_child.text
-                        elif mo_child.tag == 'attribute':
-                            #print child.attrib.values()[0]
-                            attrName = mo_child.attrib.values()[0]
-                            attr = ATTR(attrName)
-                            for attr_child in mo_child:
-                                '''
-                                if len(attr_child.text) == 0:
-                                    print 'text x', attr_child.text
-                                else:
-                                    print 'text o', attr_child.text
-                                '''
-                                if attr_child.tag == 'description': attr.description = attr_child.text
-                                elif attr_child.tag == 'dataType': pass
+                if elem.tag == 'class': # a class
+                    for mo_child in elem: # child of the class
+                        if mo_child.tag == 'attribute': # an attribute
+                            attrName = mo_child.attrib.values()[0] # name of the attribute
+                            attr = ATTR(attrName) # create the obj of 'ATTR class'
+                            for attr_child in mo_child: # child of the attribute 
+                                if len(attr_child._children) == 0: # Existence check of child 
+                                    if attr_child.text == None: exec "attr.%s = 'on'" % attr_child.tag # 
+                                    else: exec "attr.%s = %r" % (attr_child.tag, attr_child.text)
                                 else: 
-                                    temp = attr_child.tag 
-                                    attr.temp = attr_child.text
-                            attr.mo = moName
-                            mo.attribute.append(attr)
-                            print attr.__dict__
-                        else:
+                                    for data_type_child in attr_child:
+                                        #print type(attr_child.tag)
+                                        #print type(data_type_child.tag)
+                                        exec "attr.%s = %r" % (attr_child.tag, data_type_child.tag) 
+                                        for range in data_type_child:
+                                            print range
+                            attr.mo = moName # add name of mo in attr obj
+                            mo.attribute.append(attr) # add name of attr in mo obj
+                            print 'Attribute', attr.__dict__
+                        else: # except attribute
                             if len(mo_child._children) == 0:
-                                mo.info = mo_child.tag
+                                if mo_child.text == None: exec("mo.%s = 'on'" % mo_child.tag)
+                                else: exec("mo.%s = %r" % (mo_child.tag, mo_child.text))
                             else:
-                                print mo_child.tag
-                    print mo.__dict__
+                                pass
+                    print 'MO', mo.__dict__
                 else: pass         
-            else: pass#print event, elem
+            else: pass
     
 class MO(object):
     def __init__(self, name):
         self.name = name
         self.attribute = []
         self.description = None
-        self.parents = None
-        self.child = None
+        #self.parents = None
+        #self.child = None
         
     def __getattribute__(self, attr):
         #print "get attr %s" % attr
