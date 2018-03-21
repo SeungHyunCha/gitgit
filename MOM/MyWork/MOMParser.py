@@ -10,7 +10,6 @@ class MomParser(object):
                 self.root = elem.tag                                                
             elif event == 'start': 
                 if elem.tag == 'class':
-                    #print elem.attrib.values()[0]
                     mo = MO(elem.attrib.values()[0], elem) 
                     mo.handle()
                 #elif elem.tag == 'enum': pass
@@ -25,7 +24,7 @@ class MomParser(object):
                             attr.handle()
                             attr.mo = elem.attrib.values()[0]
                             mo.attribute.append(attr.name)
-                            print 'Attribute', attr.__dict__
+                            #print 'Attribute', attr.__dict__
                         else: pass
                     print 'MO', mo.__dict__
                 else: pass         
@@ -45,8 +44,7 @@ class MO(object):
             if len(mo_child._children) == 0 and mo_child.tag != 'attribute':
                 if mo_child.text == None: exec("self.%s = 'on'" % mo_child.tag)
                 else: exec("self.%s = %r" % (mo_child.tag, mo_child.text))
-            else: pass
-                
+            else: pass#print 'error_MO_handle', mo_child.attrib
     '''    
     def __getattribute__(self, attr):
         # print "get attr %s" % attr
@@ -62,50 +60,53 @@ class ATTR(object):
         self.description = None
         self.mo = None
         self.elem = elem
-    
+        self.dataType = None
+        
     def handle(self):
         for attribute in self.elem:  
             if len(attribute._children) == 0:  
                 if attribute.text == None: exec "self.%s = 'on'" % attribute.tag  
                 else: exec "self.%s = %r" % (attribute.tag, attribute.text) 
             else:
-                pass
-            '''
-                for data_type in attribute:
-                    if data_type.attrib == {}:  
-                        exec "self.%s = %r" % (attribute.tag, data_type.tag) 
-                        
-                        print attribute.tag, data_type.tag
-                        for child in data_type:
-                            if len(child._children) == 0:
-                                pass  # print 'nochild', child.tag, child.attrib, child.text
+                if attribute.tag == 'dataType':
+                    temp = attribute._children[0].tag
+                    Type = DataType(temp, attribute)
+                    Type.handle()               
+                    self.dataType = Type.name
+                    print 'DataType', Type.__dict__
+                else: 'error_ATTR_handle_datatype'   
+
+class DataType(object):
+    def __init__(self, name, elem):
+        self.name = name
+        self.elem = elem
+        
+    def handle(self):
+        for dtype in self.elem:
+            if dtype.attrib == {}:  
+                for child in dtype:
+                    if len(child._children) == 0:
+                        if child.attrib == {}:
+                            exec "self.%s = %r" % (child.tag, child.text)
+                        else:
+                            if child.text == None:
+                                exec "self.%s = %r" % (child.tag, child.attrib.values()[0])
                             else:
-                                pass  # print 'child', child.tag, child.attrib, child.text
-                                for child_child in child:
-                                    pass
-                                    # print child.tag, child_child.tag
-                                    for cchild in child_child:
-                                        pass
-                                        # print child.tag, child.text
-                        
-                    else: 
-                        # print data_type.tag, data_type.attrib
-                        exec "self.%s = %r" % (data_type.tag, data_type.attrib)
-                        for child in data_type:
-                            # print child.tag, child.text
-                            exec "self.%s.update({%r:%r})" % (data_type.tag, child.tag, child.text)
-            '''   
-
-    '''
-    def __getattribute__(self, attr):
-        # print "get attr %s" % attr
-        return object.__getattribute__(self, attr)
-
-    def __setattr__(self, attr, val):
-        # print "set attr %s to %r" % (attr, val)
-        return object.__setattr__(self, attr, val)
-    '''
+                                print 'error_dataType_handle', child.tag, child.attrib.values()[0], child.text
+                    else:
+                        exec "self.%s = []" % child.tag
+                        for gchild in child:
+                            if gchild.text == '\n\t\t\t\t\t\t\t':
+                                for ggchild in gchild:
+                                    exec "self.%s.append({%r:%r})" % (child.tag, ggchild.tag, ggchild.text)
+                            else:
+                                exec "self.%s.append({%r:%r})" % (child.tag, gchild.tag, gchild.text)
                             
+            else: 
+                exec "self.%s = %r" % (dtype.tag, dtype.attrib)
+                for child in dtype:
+                    exec "self.%s.update({%r:%r})" % (dtype.tag, child.tag, child.text)
+                         
 if __name__ == '__main__':
     #name = "LteRbsNodeComplete_Itr27_R10D03.xml"
     name = "sample.xml"
