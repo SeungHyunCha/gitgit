@@ -1,8 +1,6 @@
 import xml.etree.ElementTree as ET
 
 class MomParser:
-    Tag = ['class', 'enum', 'struct', 'exception']
-    
     def __init__(self, name):
         self.name = name
         self.root = None
@@ -17,13 +15,13 @@ class MomParser:
         for event, elem in ET.iterparse(self.name, events=('start', 'end')):
             if event == 'start' and self.root == None:              
                 self.root = elem.tag                                                
-            elif event == 'start': 
+            elif event == 'start': # create obj for mo, enum, struct, exception
                 if elem.tag == 'class':
-                    mo = Mo(elem) # create MO
+                    mo = Mo(elem)
                     self.allmo[mo.getName()] = mo.addMo()
                 
                 elif elem.tag == 'enum': 
-                    en = Enum(elem) # create ENUM
+                    en = Enum(elem) 
                     self.allenum[en.getName()] = en.addMo()
                 
                 elif elem.tag == 'struct':
@@ -33,10 +31,10 @@ class MomParser:
                 elif elem.tag == 'exception': 
                     ex = Exception(elem)
                     self.allexception[ex.getName()] = ex.addMo()
-                
+
                 else: '-----Error %s in event' % elem.tag
             
-            elif event == 'end':
+            elif event == 'end': # add infomation in obj
                 for mo_child in elem:  
                     if elem.tag == 'class': 
                         if mo_child.tag == 'attribute': 
@@ -63,11 +61,58 @@ class MomParser:
                             attr = Attr(mo_child)  
                             ex.addAttrs(attr)
                         else: pass
+                        
+                    elif elem.tag == 'relationship':
+                        for attr in elem:
+                            for child in attr:
+#                                 print child.tag # parent, child
+                                for relation in child:
+                                    if relation.attrib != {}:
+                                        if relation.attrib.values()[0] in self.allmo:
+                                            print relation.attrib, relation.attrib.values()[0]
+                                            moaddr = self.allmo[relation.attrib.values()[0]]
+                                            print moaddr
+                                            addvar = Mo(self.allmo[relation.attrib.values()[0]])
+#                                             print addvar.__dict__
+                                            for card in relation:
+                                                pass
+                                        else:
+                                            print relation, relation.tag, relation.attrib, relation.text
+                                '''
+                        moname = elem.attrib.values()[0].split('_to_')
+                        parent = moname[0]
+                        child = moname[1]
+                        if parent in self.allmo:
+                            a = Mo(self.allmo[parent])
+                            for attr in elem:
+                                for child in attr:
+                                    print child.tag
+                                    for relation in child:
+#                                         print relation.tag, relation.attrib, relation.text
+                                        for card in relation:
+                                            pass
+#                                             print card.tag, card.text
+'''
                     else: pass 
             else: pass
 
+    def printMo(self):
+        print self.allmo
+    
+    def printAttr(self):
+        print self.allattr
+    
+    def printEnum(self):
+        print self.allenum
+        
+    def printStruct(self):
+        print self.allstruct
+        
+    def printException(self):
+        print self.allexception
+        
     def printElem(self, mo="", attribute=""):
-        pass
+        pass #print 
 
 class Mo:
     def __init__(self, elem):
@@ -127,15 +172,14 @@ class Attr:
         return self.elem.tag
     
     def __handle(self):
-        if self.elem.tag == 'structMember':
-            for attribute in self.elem:
-                if len(attribute._children) == 0:
-                    if attribute.text == None: exec "self.%s = 'on'" % attribute.tag 
-                    else: exec "self.%s = %r" % (attribute.tag, attribute.text) 
-                else:
-                    Type = DataType(attribute)
-                    for key, value in Type.__dict__.items(): #get dataType
-                        self.dataTypes[key] = value
+        for attribute in self.elem:
+            if len(attribute._children) == 0:
+                if attribute.text == None: exec "self.%s = 'on'" % attribute.tag 
+                else: exec "self.%s = %r" % (attribute.tag, attribute.text) 
+            else:
+                Type = DataType(attribute)
+                for key, value in Type.__dict__.items(): #get dataType
+                    self.dataTypes[key] = value
         
 class DataType:
     def __init__(self, elem):
@@ -193,4 +237,7 @@ if __name__ == '__main__':
     name = "LteRbsNodeComplete_Itr27_R10D03.xml"
     #name = "sample.xml"
     parser = MomParser(name)
+#     parser.printElem()
+#     print parser.allattr
+#     print parser.printMo()
 
