@@ -1,4 +1,5 @@
 import xml.etree.ElementTree as ET
+import re
 
 class MomParser:
     def __init__(self, name):
@@ -18,7 +19,7 @@ class MomParser:
                 elif elem.tag == 'struct':
                     structname = Struct(elem)
                 elif elem.tag == 'exception': 
-                    excepname = Exception(elem)
+                    excepname = MyException(elem)
                 else: pass    
 
             elif event == 'end': # add infomation in obj
@@ -121,9 +122,8 @@ class Attr:
     def __init__(self, elem):
         self.name = elem.attrib.values()[0]
         self.obj = elem
-        self.description = None
         self.mo = None
-        self.dataTypes = {}
+        self.type = None
         self.flags = []
         self.others = {}
         self.__handle()
@@ -133,7 +133,7 @@ class Attr:
     
     def getData(self):
         return self.__dict__
-        
+    
     def __handle(self):
             for attr in self.obj:
                 if len(attr._children) == 0:
@@ -144,11 +144,11 @@ class Attr:
                         exec "self.%s = %r" % (attr.tag, attr.text)
                         self.others.update({attr.tag:attr.text})
                 else:
-                    Type = DataType(attr)
-                    Type.printData()
-                    for key, value in Type.__dict__.items(): #get dataType in Attr
-                        if key == 'elem': pass
-                        else: self.dataTypes[key] = value
+                    self.type = DataType(attr)
+                    self.type.printData()                    
+#                     for key, value in Type.__dict__.items(): #get dataType in Attr
+#                         if key == 'elem': pass
+#                         else: self.dataTypes[key] = value
 
     def printAttr(self):
         str = "*" * 100
@@ -158,18 +158,18 @@ class Attr:
         for flag in self.flags: print flag
         other_list = self.others.keys()
         for key in other_list: print "%s\t%s" %(key, self.others[key])
+        self.type.printData()
         
 class DataType:
     def __init__(self, elem):
         self.elem = elem
-        self.values = []
+#         self.values = []
         self.__handle()
 
     def __handle(self):
         if self.elem.attrib == {}: pass
         else:
             exec "self.%s = %r" % (self.elem.attrib.keys()[0], self.elem.attrib.values()[0]) 
-#             print self.elem.attrib.keys()[0], self.elem.attrib.values()[0]
         for dtype in self.elem:
             exec "self.%s = {}" % dtype.tag
             if dtype.attrib == {}:
@@ -179,26 +179,25 @@ class DataType:
                             if child.text == None: 
                                 exec "self.%s = {}" % child.tag
                             else:
-                                self.values.append(child.text)
+#                                 self.values.append(child.text)
                                 temp = {}
                                 temp[child.tag] = child.text
                                 exec "self.%s.update(%s)" % (dtype.tag, temp)
                         else:
                             if child.text == None: 
                                 exec "self.%s = %r" % (child.tag, child.attrib.values()[0])
-#                                 print child.tag, child.attrib.values()[0]
                             else: pass
                     else:
                         exec "self.%s = {}" % child.tag
                         for gchild in child:
                             if gchild.text == '\n\t\t\t\t\t\t\t':
                                 for ggchild in gchild:
-                                    self.values.append(ggchild.text)
+#                                     self.values.append(ggchild.text)
                                     temp = {}
                                     temp[ggchild.tag] = ggchild.text
                                     exec "self.%s.update(%s)" % (child.tag, temp)
                             else:
-                                self.values.append(gchild.text)
+#                                 self.values.append(gchild.text)
                                 temp = {}
                                 temp[gchild.tag] = gchild.text
                                 exec "self.%s.update(%s)" % (child.tag, temp)
@@ -206,30 +205,34 @@ class DataType:
             else: 
                 exec "self.%s = %s" % (dtype.tag, dtype.attrib)
                 for child in dtype:
-                    self.values.append(child.text)
+#                     self.values.append(child.text)
                     temp = {}
                     temp[child.tag] = child.text
                     exec "self.%s.update(%s)" % (dtype.tag, temp)
                     
     def printData(self):
+        print "*************dataType*************"
         key_list = self.__dict__.keys()
         for key in key_list:
             if key != 'elem': 
                 if self.__dict__[key] == {}:
-                    pass#print '*************', key
+                    print key_list
+                    print key
                 else:
                     child = self.__dict__[key]
+                    print child
                     if key == None: pass
                     else:
-                        print self.values, key, child
-#                         for value in child_list:
-#                             print value
+#                         print self.values
+                        print '<%s>' % key
+                        for value in child:
+                            print value, str(child[value])
                         
                     
                         
 class Enum(Mo): pass
 class Struct(Mo): pass
-class Exception(Mo): pass
+class MyException(Mo): pass
 
                        
 if __name__ == '__main__':
