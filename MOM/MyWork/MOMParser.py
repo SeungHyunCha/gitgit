@@ -162,12 +162,14 @@ class Attr:
 class DataType:
     def __init__(self, elem):
         self.elem = elem
+        self.values = []
         self.__handle()
 
     def __handle(self):
         if self.elem.attrib == {}: pass
         else:
             exec "self.%s = %r" % (self.elem.attrib.keys()[0], self.elem.attrib.values()[0]) 
+#             print self.elem.attrib.keys()[0], self.elem.attrib.values()[0]
         for dtype in self.elem:
             exec "self.%s = {}" % dtype.tag
             if dtype.attrib == {}:
@@ -177,21 +179,26 @@ class DataType:
                             if child.text == None: 
                                 exec "self.%s = {}" % child.tag
                             else:
+                                self.values.append(child.text)
                                 temp = {}
                                 temp[child.tag] = child.text
                                 exec "self.%s.update(%s)" % (dtype.tag, temp)
                         else:
-                            if child.text == None: exec "self.%s = %r" % (child.tag, child.attrib.values()[0])
+                            if child.text == None: 
+                                exec "self.%s = %r" % (child.tag, child.attrib.values()[0])
+#                                 print child.tag, child.attrib.values()[0]
                             else: pass
                     else:
                         exec "self.%s = {}" % child.tag
                         for gchild in child:
                             if gchild.text == '\n\t\t\t\t\t\t\t':
                                 for ggchild in gchild:
+                                    self.values.append(ggchild.text)
                                     temp = {}
                                     temp[ggchild.tag] = ggchild.text
                                     exec "self.%s.update(%s)" % (child.tag, temp)
                             else:
+                                self.values.append(gchild.text)
                                 temp = {}
                                 temp[gchild.tag] = gchild.text
                                 exec "self.%s.update(%s)" % (child.tag, temp)
@@ -199,6 +206,7 @@ class DataType:
             else: 
                 exec "self.%s = %s" % (dtype.tag, dtype.attrib)
                 for child in dtype:
+                    self.values.append(child.text)
                     temp = {}
                     temp[child.tag] = child.text
                     exec "self.%s.update(%s)" % (dtype.tag, temp)
@@ -208,14 +216,15 @@ class DataType:
         for key in key_list:
             if key != 'elem': 
                 if self.__dict__[key] == {}:
-                    print '*************', key
+                    pass#print '*************', key
                 else:
                     child = self.__dict__[key]
-                    print key, child
-#                     child_list = child.keys()
-#                     for value in child_list:
-#                         print value
-                    
+                    if key == None: pass
+                    else:
+                        print self.values, key, child
+#                         for value in child_list:
+#                             print value
+                        
                     
                         
 class Enum(Mo): pass
