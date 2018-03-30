@@ -48,28 +48,31 @@ class MomParser:
 
     def mom(self, mo="", attr=""): # print element
         str = "*" * 100
-        mo_list = self.mos.keys()
-        if attr == "":
-            if mo in mo_list: # check mo
-                getMo = self.mos[mo]
-                getMo.showMoAttrInfo()
-    
-            elif mo == "":
-                print str,'\n',"MO\t\t\t",'\n',str
-                for mo in self.mos.keys():
-                    print mo
-                    
-            else:
-                print str,'\n',"MO\t\t\t",'\n',str
-                print str, '\n', "Attribute\t\t",'\n',str
-        
+        if mo == "":    
+            print str,'\n',"MO\t\t\t",'\n',str
+            for mo in self.mos.keys():
+                print mo
+            
         else:
-            if mo == "":
-                if attr in self.attrs:
-                    getAttr = self.attrs[attr]
-                    getAttr.printAttr()
-            else: pass
-    
+            p = re.compile(mo, re.IGNORECASE)
+            mo_list = self.mos.keys()
+            for moc in mo_list:
+                check = p.search(moc)
+                if check:   
+                    getMo = self.mos[moc]
+                    if attr == "":
+                        getMo.showMoAttrInfo()
+                    else:
+                        print str,'\n',"Mo\t\t\tAttribute"
+                        print getMo.getName()
+                        m = re.compile(attr, re.IGNORECASE)
+                        attr_list = getMo.getAttrs()   
+                        for attr_name in attr_list:
+                            check1 = m.search(attr_name)
+                            if check1:
+                                getAttr = attr_list[attr_name]
+                                getAttr.printAttr()
+
 class Mo:
     def __init__(self, elem):
         self.name = elem.attrib.values()[0]
@@ -100,8 +103,9 @@ class Mo:
         for mo_child in self.obj:
             if len(mo_child._children) == 0 and mo_child.tag != 'attribute' or 'enumMember' or 'structMember':
                 if mo_child.text == None: 
-                    exec("self.%s = {}" % mo_child.tag)
-                    self.flags.append(mo_child.tag)
+                    if mo_child.tag != 'attribute':
+                        exec("self.%s = {}" % mo_child.tag)
+                        self.flags.append(mo_child.tag)
                 else: 
                     if mo_child.text == '\n\t\t\t\t': pass
                     else: 
@@ -112,11 +116,12 @@ class Mo:
     def showMoAttrInfo(self):
         str = "*" * 100
         print str,'\n',"MO:\t\t", self.name, '\n'
-        for flag in self.flags: print flag
+        for flag in sorted(self.flags): print flag
         other_list = self.others.keys()
-        for key in other_list: print "%s\t%s" %(key, self.others[key]) 
+        for key in sorted(other_list): print "%s\t%s" %(key, self.others[key]) 
         print str,'\n',"Attribute:"
-        for attr in self.attrs_obj.keys(): print "\t\t", attr
+        for attr in sorted(self.attrs_obj.keys()): print "\t\t", attr
+        print '\n'
         
 class Attr:
     def __init__(self, elem):
@@ -145,20 +150,19 @@ class Attr:
                         self.others.update({attr.tag:attr.text})
                 else:
                     self.type = DataType(attr)
-                    self.type.printData()                    
+#                     self.type.printData()                    
 #                     for key, value in Type.__dict__.items(): #get dataType in Attr
 #                         if key == 'elem': pass
 #                         else: self.dataTypes[key] = value
 
     def printAttr(self):
-        str = "*" * 100
-        print str,'\n',"Mo\t\t\tAttr"
-        print str,'\n',self.mo,"\t", self. name
-        print str
-        for flag in self.flags: print flag
+        str = "-" * 100
         other_list = self.others.keys()
-        for key in other_list: print "%s\t%s" %(key, self.others[key])
-        self.type.printData()
+        print "\t\t\t", self. name
+        for flag in sorted(self.flags): print flag
+        for key in sorted(other_list): print "\t\t\t\t\t<%s>\n\t\t\t\t\t  %s" %(key, self.others[key])
+#         self.type.printData()
+        print str
         
 class DataType:
     def __init__(self, elem):
@@ -240,6 +244,8 @@ if __name__ == '__main__':
     #name = "sample.xml"
     parser = MomParser(name)
 #     parser.mom()
-    parser.mom(mo='ReportConfigA1Sec')
-    parser.mom(attr='a1ThresholdRsrpSec')
+#     parser.mom(mo='ReportConfigA1Sec')
+#     parser.mom(mo='utrancelltdd')
+    parser.mom(mo='utrancelltdd', attr='zzz')
+#     parser.mom(attr='a1ThresholdRsrpSec')
 
