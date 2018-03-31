@@ -67,7 +67,7 @@ class MomParser:
                         print getMo.getName()
                         m = re.compile(attr, re.IGNORECASE)
                         attr_list = getMo.getAttrs()   
-                        for attr_name in attr_list:
+                        for attr_name in sorted(attr_list):
                             check1 = m.search(attr_name)
                             if check1:
                                 getAttr = attr_list[attr_name]
@@ -159,10 +159,12 @@ class Attr:
         str = "-" * 100
         other_list = self.others.keys()
         print "\t\t\t", self. name
-        for flag in sorted(self.flags): print flag
-        for key in sorted(other_list): print "\t\t\t\t\t<%s>\n\t\t\t\t\t  %s" %(key, self.others[key])
-#         self.type.printData()
-        print str
+        print "\t\t\t\t\t",
+        for flag in sorted(self.flags): print flag,
+        print '\n', 
+        for key in sorted(other_list): print "\t\t\t\t\t<%s>\n\t\t\t\t\t%s" %(key, self.others[key])
+        self.type.printData()
+        print '\n', str
         
 class DataType:
     def __init__(self, elem):
@@ -215,23 +217,25 @@ class DataType:
                     exec "self.%s.update(%s)" % (dtype.tag, temp)
                     
     def printData(self):
-        print "*************dataType*************"
+        print "\t\t\t\t\t<dataType>"
         key_list = self.__dict__.keys()
         for key in key_list:
-            if key != 'elem': 
+            if key != 'elem':
                 if self.__dict__[key] == {}:
-                    print key_list
-                    print key
+                    print "\t\t\t\t\t", key
                 else:
                     child = self.__dict__[key]
-                    print child
                     if key == None: pass
                     else:
-#                         print self.values
-                        print '<%s>' % key
-                        for value in child:
-                            print value, str(child[value])
-                        
+                        if key == 'range':
+                            print "\t\t\t\t\t", key,
+                            print 'min:', child['min'], 'max:', child['max']
+                        elif key == 'enumRef':
+                            print "\t\t\t\t\t", key
+                        else:
+                            print "\t\t\t\t\t", key
+                            for cchild in child:
+                                print "\t\t\t\t\t", cchild, str(child[cchild])    
                     
                         
 class Enum(Mo): pass
@@ -246,6 +250,6 @@ if __name__ == '__main__':
 #     parser.mom()
 #     parser.mom(mo='ReportConfigA1Sec')
 #     parser.mom(mo='utrancelltdd')
-    parser.mom(mo='utrancelltdd', attr='zzz')
-#     parser.mom(attr='a1ThresholdRsrpSec')
+#     parser.mom(mo='utrancelltdd', attr='zzz')
+    parser.mom(mo='ReportConfigA1Sec', attr='r')
 
