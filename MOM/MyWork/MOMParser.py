@@ -231,7 +231,9 @@ class DataType:
                             print "\t\t\t\t\t", key,
                             print 'min:', child['min'], 'max:', child['max']
                         elif key == 'enumRef':
-                            print "\t\t\t\t\t", key
+                            for cchild in child:
+                                if cchild == 'name': print "\t\t\t\t\t", key, str(child[cchild])
+                                else: print "\t\t\t\t\t", cchild, str(child[cchild])    
                         else:
                             print "\t\t\t\t\t", key
                             for cchild in child:
@@ -249,7 +251,7 @@ if __name__ == '__main__':
     parser = MomParser(name)
 #     parser.mom()
 #     parser.mom(mo='ReportConfigA1Sec')
-#     parser.mom(mo='utrancelltdd')
+    parser.mom(mo='utrancelltdd')
 #     parser.mom(mo='utrancelltdd', attr='zzz')
-    parser.mom(mo='ReportConfigA1Sec', attr='r')
+#     parser.mom(mo='ReportConfigA1Sec', attr='r')
 
