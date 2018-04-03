@@ -1,5 +1,6 @@
 import xml.etree.ElementTree as ET
 import re
+from __builtin__ import isinstance
 
 class MomParser:
     def __init__(self, name):
@@ -66,6 +67,7 @@ class MomParser:
                         getMo.showMoInfo()
                     else:
                         print str,'\n',"MOC".ljust(30), 'Attribute'.ljust(30), 'defaultValue'.ljust(30), 'Flags'.ljust(30), 'Range'.ljust(30)
+                        print str
                         m = re.compile(attr, re.IGNORECASE)
                         attr_list = getMo.getAttrs()
                         for attr_name in sorted(attr_list):
@@ -152,7 +154,12 @@ class Attr:
         return str
     
     def getType(self):
-        return self.type
+        if isinstance(self.type, dict) == True:
+            print self.type
+            for key, value in self.type:
+                str = key
+            return str
+        else: return self.type
     
     def getLength(self):
         return self.length
@@ -188,7 +195,11 @@ class Attr:
                         self.type = data.getType()
                 else:
                     data = DataType(attr)  
-#                 print data.getData()   
+                    self.flags.append(data.getFlags())
+                    self.length = data.getLength()
+                    self.range = data.getRange()
+                    self.values = data.getValues()
+                    self.type = data.getType()
                 
         
 class DataType:
