@@ -378,7 +378,11 @@ def testcase():
 #     parser.mom(mo='Rcs',attr='t')
 #     parser.mom(mo='ReportConfigA1Sec')
 #     parser.mom(attr='pmradio')
+<<<<<<< HEAD
     parser.mom(mo='ReportConfigA1Sec', attr='r')
+=======
+#     parser.mom(mo='ReportConfigA1Sec', attr='r')
+>>>>>>> branch 'master' of https://github.com/SeungHyunCha/Mytest.git
 
 if __name__ == '__main__':
     testcase()
