@@ -1,4 +1,3 @@
-
 import argparse
 
 class A:
@@ -34,3 +33,4 @@ elif args.add:
 else:
 	print 'bye'
 
+if __name__ == '__main__':

@@ -162,12 +162,12 @@ class Mo:
             if len(mo_child._children) == 0 and mo_child.tag != 'attribute' or 'enumMember' or 'structMember':
                 if mo_child.text == None: 
                     if mo_child.tag != 'attribute':
-                        exec("self.%s = {}" % mo_child.tag)
+                        exec "self.%s = {}" % mo_child.tag
                         self.flags.append(mo_child.tag)
                 else: 
                     if mo_child.text == '\n\t\t\t\t': pass
                     else: 
-                        exec("self.%s = %r" % (mo_child.tag, mo_child.text))
+                        exec "self.%s = %r" % (mo_child.tag, mo_child.text)
                         self.others.update({mo_child.tag:mo_child.text})
             else: pass
     
@@ -176,8 +176,7 @@ class Mo:
         print line,'\n', "MOC", '\n', line
         print self.name
         for flag in sorted(self.flags): print flag
-        other_list = self.others.keys()
-        for key in sorted(other_list): print "%s\t%s" %(key, self.others[key]) 
+        for key in sorted(self.others): print "%s\t%s" %(key, self.others[key]) 
         print line,'\n',"Attribute".ljust(30), "Type".ljust(40), 'Flags', '\n', line
         for key, value in sorted(self.attrs_obj.items()): 
             print key.ljust(30), value.getType().ljust(40), value.getFlags()
@@ -218,7 +217,7 @@ class Attr:
             return ''
         else: 
             leng = []
-            for val in sorted(self.length.keys(),reverse=True):
+            for val in sorted(self.length, reverse=True):
                 leng.append(int(self.length[val]))
             return str(leng)
          
@@ -233,7 +232,7 @@ class Attr:
             return ''
         else:
             val = []
-            for v in sorted(self.values.keys()):
+            for v in sorted(self.values):
                 val.append(self.values[v])
             return str(val)
     
@@ -368,15 +367,18 @@ class Enum(Mo): pass
 class Struct(Mo): pass
 class MyException(Mo): pass
  
-if __name__ == '__main__':
+def testcase():
     name = "LteRbsNodeComplete_Itr27_R10D03.xml"
     #name = "sample.xml"
     parser = MomParser(name)
 #     parser.mom()
-    parser.mom(mo='celltdd')
+#     parser.mom(mo='celltdd')
 #     parser.mom(mo='celltdd', attr='pm')
 #     parser.mom(mo='utrancelltdd', attr='pmradio')
 #     parser.mom(mo='Rcs',attr='t')
 #     parser.mom(mo='ReportConfigA1Sec')
 #     parser.mom(attr='pmradio')
-#     parser.mom(mo='ReportConfigA1Sec', attr='r')
+    parser.mom(mo='ReportConfigA1Sec', attr='r')
+
+if __name__ == '__main__':
+    testcase()
