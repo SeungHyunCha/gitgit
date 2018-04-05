@@ -13,7 +13,7 @@ class MomParser:
         self.exceps = {}
         self.exmembers = {}
         self.mim = {}
-        self.relation = {}
+        self.relations = {}
         self.__run()
         
     def __run(self):
@@ -35,10 +35,10 @@ class MomParser:
                     self.mim = elem.attrib
                 else: 
                     if elem.tag == 'relationship':
-                        str = elem.attrib.values()[0]
-                        str = str.split('_to_')
-                        str= {str[0]:str[1]}
-                        self.relation.update(str)
+                        temp = elem.attrib.values()[0]
+                        temp= temp.split('_to_')
+                        temp= {temp[0]:temp[1]}
+                        self.relations.update(temp)
                         
             elif event == 'end': # add infomation in obj
                 for attr in elem: 
@@ -47,7 +47,6 @@ class MomParser:
                         child.mo = moname.getName()
                         self.attrs[child.getName()] = child
                         moname.addAttrs(child)
-#                         moname.addAttrsInfo(child)
                     
                     elif elem.tag == 'enum' and attr.tag == 'enumMember': 
                         child = Attr(attr)
@@ -96,8 +95,7 @@ class MomParser:
                         
         else:
             p = re.compile(mo, re.IGNORECASE)
-            mo_list = self.mos.keys()
-            for moc in mo_list:
+            for moc in self.mos:
                 check = p.search(moc)
                 if check:   
                     getMo = self.mos[moc]
@@ -375,7 +373,7 @@ if __name__ == '__main__':
     #name = "sample.xml"
     parser = MomParser(name)
 #     parser.mom()
-#     parser.mom(mo='celltdd')
+    parser.mom(mo='celltdd')
 #     parser.mom(mo='celltdd', attr='pm')
 #     parser.mom(mo='utrancelltdd', attr='pmradio')
 #     parser.mom(mo='Rcs',attr='t')
