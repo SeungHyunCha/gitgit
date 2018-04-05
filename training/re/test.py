@@ -1,3 +1,5 @@
 import re
 p = re.compile('ab*')
-print p
+
+if __name__ == '__main__':
+    print p
