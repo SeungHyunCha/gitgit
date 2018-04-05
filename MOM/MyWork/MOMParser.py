@@ -368,7 +368,7 @@ class Enum(Mo): pass
 class Struct(Mo): pass
 class MyException(Mo): pass
  
-if __name__ == '__main__':
+def testcase():
     name = "LteRbsNodeComplete_Itr27_R10D03.xml"
     #name = "sample.xml"
     parser = MomParser(name)
@@ -380,3 +380,6 @@ if __name__ == '__main__':
 #     parser.mom(mo='ReportConfigA1Sec')
 #     parser.mom(attr='pmradio')
 #     parser.mom(mo='ReportConfigA1Sec', attr='r')
+
+if __name__ == '__main__':
+    testcase()
