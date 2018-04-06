@@ -350,10 +350,8 @@ class DataType:
                         else: 
                             if child._children == []:
                                 self.values.update({child.tag:child.text})
-                            else:
-                                print 'attr __handle', child.tag, child.text
-                    else: 
-                        print 'attr __handle', child.tag, child.text
+                            else: print 'attr __handle', child.tag, child.text
+                    else: print 'attr __handle', child.tag, child.text
         else:
             temp = {}
             temp = {self.attr.tag:self.attr.attrib.values()[0]}
@@ -369,20 +367,18 @@ class MyException(Mo): pass
  
 def testcase():
     name = "LteRbsNodeComplete_Itr27_R10D03.xml"
-    #name = "sample.xml"
+#     name = "sample.xml"
     parser = MomParser(name)
 #     parser.mom()
-#     parser.mom(mo='celltdd')
-#     parser.mom(mo='celltdd', attr='pm')
+#     parser.mom(mo='nbiot')
+#     parser.mom(mo='nbiot', attr='pm')
 #     parser.mom(mo='utrancelltdd', attr='pmradio')
+    parser.mom(attr='nbiot')
+#     parser.mom(attr='^nbiot')
 #     parser.mom(mo='Rcs',attr='t')
 #     parser.mom(mo='ReportConfigA1Sec')
-#     parser.mom(attr='pmradio')
-<<<<<<< HEAD
-    parser.mom(mo='ReportConfigA1Sec', attr='r')
-=======
 #     parser.mom(mo='ReportConfigA1Sec', attr='r')
->>>>>>> branch 'master' of https://github.com/SeungHyunCha/Mytest.git
+#     parser.mom(mo='ReportConfigA1Sec', attr='r')
 
 if __name__ == '__main__':
     testcase()

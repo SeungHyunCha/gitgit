@@ -9,7 +9,7 @@ The RDNs of these MOs are EUtranFrequency=&lt;number&gt;, for example EUtranFreq
 RDN must match attribute arfcnValueEUtranDl. If it does not match, automatic creation of MO can fail, leading to X2 link setup failure with neighbor eNB.</description>
 			<attribute name="EUtranFrequencyId">
 				<description>The value component of the Relative Distinguished Name (RDN).
-</description>
+
 				<mandatory></mandatory>
 				<noNotification></noNotification>
 				<restricted></restricted>
