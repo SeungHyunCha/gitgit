@@ -117,8 +117,6 @@ class ShowMom(IterParser):
     def showValue(self):
         pass
 
-<<<<<<< HEAD
-=======
 #     def showValue(self):
 #         pass
 #     
@@ -131,7 +129,6 @@ class ShowMom(IterParser):
 #     def showValue(self):
 #         pass
    
->>>>>>> branch 'master' of https://github.com/SeungHyunCha/Mytest.git
 if __name__ == '__main__':
     name = "LteRbsNodeComplete_Itr27_R10D03.xml"
     parser = ShowMom(name)
