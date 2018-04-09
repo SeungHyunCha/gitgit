@@ -72,24 +72,27 @@ class MomParser:
         line = "*" * 200
         print line
         print 'name:"%s"' % self.mim['name'], 'version:"%s"' % self.mim['version'], 'release:"%s"' %self.mim['release'], 'author:"%s"' %self.mim['author'], 'revision:"%s"' %self.mim['revision']
-        if mo == "":    
-            # show mo, enum, struct, exception
-            print line,'\n',"MO".ljust(30),'\n',line
-            for mo in self.mos:
-                print mo
-            print '\n', line,'\n',"ENUM".ljust(30),'\n',line
-            for enum in self.enums:
-                print enum
-               
-            if attr != "":
+        if mo == "":   
+            if attr == "": 
+                # show mo, enum, struct, exception
+                print line,'\n',"MO".ljust(30),'\n',line
+                for mo in self.mos:
+                    print mo
+                print '\n', line,'\n',"ENUM".ljust(30),'\n',line
+                for enum in self.enums:
+                    print enum
+                   
+            else:
                 print line,'\n',"MOC".ljust(30), 'Attribute'.ljust(30), 'defaultValue'.ljust(30), 'Flags'.ljust(30), 'Range'.ljust(30)
                 print line
                 p = re.compile(attr, re.IGNORECASE)
                 for attr_name in self.attrs:
-                    check = p.search(attr)
+                    check = p.search(attr_name)
                     if check:
                         getAttr = self.attrs[attr_name]
-                        print getAttr.getMoName().ljust(30), getAttr.getName().ljust(30), getAttr.getValues(), getAttr.getFlags().ljust(30), getAttr.getRange()
+#                         print getAttr.getMoName().ljust(30), getAttr.getName().ljust(30), getAttr.getValues(), getAttr.getFlags().ljust(30), getAttr.getRange()
+                        print getAttr.getMoName().ljust(30), getAttr.getName().ljust(30), getAttr.getFlags().ljust(40), getAttr.getLength().ljust(20), getAttr.getValues().ljust(20), getAttr.getRange()
+                            
                     else:
                         pass
                         
@@ -373,7 +376,8 @@ def testcase():
 #     parser.mom(mo='nbiot')
 #     parser.mom(mo='nbiot', attr='pm')
 #     parser.mom(mo='utrancelltdd', attr='pmradio')
-    parser.mom(attr='nbiot')
+#     parser.mom(attr='id$')
+#     parser.mom(attr='^freq')
 #     parser.mom(attr='^nbiot')
 #     parser.mom(mo='Rcs',attr='t')
 #     parser.mom(mo='ReportConfigA1Sec')
