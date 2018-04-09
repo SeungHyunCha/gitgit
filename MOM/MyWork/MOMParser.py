@@ -1,7 +1,7 @@
 import xml.etree.ElementTree as ET
 import re
 
-class MomParser:
+class IterParser:
     def __init__(self, name):
         self.name = name
         self.mos = {}
@@ -11,7 +11,7 @@ class MomParser:
         self.structs = {}
         self.smembers = {}
         self.exceps = {}
-        self.exmembers = {}
+        self.expmembers = {}
         self.mim = {}
         self.relations = {}
         self.__run()
@@ -41,31 +41,39 @@ class MomParser:
                         self.relations.update(temp)
                         
             elif event == 'end': # add infomation in obj
-                for attr in elem: 
-                    if elem.tag == 'class' and attr.tag == 'attribute':
-                        child = Attr(attr)
-                        child.mo = moname.getName()
-                        self.attrs[child.getName()] = child
-                        moname.addAttrs(child)
-                    
-                    elif elem.tag == 'enum' and attr.tag == 'enumMember': 
-                        child = Attr(attr)
-                        child.mo = enumname.getName()  
-                        self.emembers[child.getName()] = child
-                        enumname.addAttrs(child)
-                        
-                    elif elem.tag == 'struct' and attr.tag == 'structMember': 
-                        child = Attr(attr) 
-                        child.mo = structname.getName() 
-                        self.smembers[child.getName()] = child
-                        structname.addAttrs(child)
-                    
-                    elif elem.tag == 'exception' and attr.tag == 'exceptionParameter': 
-                        child = Attr(attr)  
-                        child.mo = excepname.getName()
-                        self.emembers[child.getName()] = child
-                        excepname.addAttrs(child)
-                    else: pass
+                if elem.tag == 'class':
+                    moname.handle()
+                    for attr in elem:
+                        if attr.tag == 'attribute': 
+                            child = Attr(attr)
+                            child.mo = moname.getName()
+                            self.attrs[child.getName()] = child
+                            moname.addAttrs(child)            
+                elif elem.tag == 'enum': 
+                    enumname.handle()
+                    for attr in elem:
+                        if attr.tag == 'enumMember': 
+                            child = Attr(attr)
+                            child.mo = enumname.getName()  
+                            self.emembers[child.getName()] = child
+                            enumname.addAttrs(child)
+                elif elem.tag == 'struct': 
+                    structname.handle()
+                    for attr in elem:
+                        if attr.tag == 'structMember': 
+                            child = Attr(attr) 
+                            child.mo = structname.getName() 
+                            self.smembers[child.getName()] = child
+                            structname.addAttrs(child)
+                elif elem.tag == 'exception': 
+                    excepname.handle()
+                    for attr in elem:
+                        if attr.tag == 'exceptionParameter': 
+                            child = Attr(attr)  
+                            child.mo = excepname.getName()
+                            self.expmembers[child.getName()] = child
+                            excepname.addAttrs(child)
+                else: pass
             else: pass
 
     def mom(self, mo="", attr=""): # print element
@@ -128,10 +136,16 @@ class Mo:
         self.parent = None
         self.child = None
         self.obj = elem
-        self.handle()
+#         self.handle()
     
     def getName(self):
         return self.name
+    
+    def getDesc(self):
+        for desc in self.others: 
+            if desc == 'description':
+                desc = self.others[desc]
+                return desc
     
     def getTag(self):
         return self.obj.tag
@@ -162,11 +176,10 @@ class Mo:
     
     def handle(self):
         for mo_child in self.obj:
-            if len(mo_child._children) == 0 and mo_child.tag != 'attribute' or 'enumMember' or 'structMember':
+            if len(mo_child._children) == 0 and mo_child.tag != 'attribute' and 'enumMember' and 'structMember' and 'exception':
                 if mo_child.text == None: 
-                    if mo_child.tag != 'attribute':
-                        exec "self.%s = {}" % mo_child.tag
-                        self.flags.append(mo_child.tag)
+                    exec "self.%s = {}" % mo_child.tag
+                    self.flags.append(mo_child.tag)
                 else: 
                     if mo_child.text == '\n\t\t\t\t': pass
                     else: 
@@ -200,6 +213,12 @@ class Attr:
     def getName(self):
         return self.name
     
+    def getDesc(self):
+        for desc in self.others: 
+            if desc == 'description':
+                desc = self.others[desc]
+                return desc
+            
     def getMoName(self):
         return self.mo
         
@@ -371,7 +390,7 @@ class MyException(Mo): pass
 def testcase():
     name = "LteRbsNodeComplete_Itr27_R10D03.xml"
 #     name = "sample.xml"
-    parser = MomParser(name)
+    parser = IterParser(name)
 #     parser.mom()
 #     parser.mom(mo='nbiot')
 #     parser.mom(mo='nbiot', attr='pm')
