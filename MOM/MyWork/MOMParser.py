@@ -176,7 +176,11 @@ class Mo:
     
     def handle(self):
         for mo_child in self.obj:
+<<<<<<< HEAD
             if len(mo_child._children) == 0 and mo_child.tag != 'attribute' and 'enumMember' and 'structMember' and 'exceptionParameter':
+=======
+            if len(mo_child._children) == 0 and mo_child.tag != 'attribute' and 'enumMember' and 'structMember' and 'exception':
+>>>>>>> branch 'master' of https://github.com/SeungHyunCha/Mytest.git
                 if mo_child.text == None: 
                     exec "self.%s = {}" % mo_child.tag
                     self.flags.append(mo_child.tag)
@@ -391,7 +395,11 @@ def testcase():
     name = "LteRbsNodeComplete_Itr27_R10D03.xml"
 #     name = "sample.xml"
     parser = IterParser(name)
+<<<<<<< HEAD
     parser.mom()
+=======
+#     parser.mom()
+>>>>>>> branch 'master' of https://github.com/SeungHyunCha/Mytest.git
 #     parser.mom(mo='nbiot')
 #     parser.mom(mo='nbiot', attr='pm')
 #     parser.mom(mo='utrancelltdd', attr='pmradio')
