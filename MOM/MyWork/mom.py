@@ -2,36 +2,9 @@ from MOMParser import IterParser
 import re 
 import argparse
 
-def argParse():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-i', dest ='file', action = 'store', type=argparse.FileType('r'))
-    parser.add_argument('-d', dest ='test', action = 'store_true')
-    # parser.add_argument('mo', type = str, action = 'store', default = None, help = 'mo name')
-    # parser.add_argument('attr', type = str, action = 'store', default = None, help = 'attribute name')
-    args = parser.parse_args()      
-    
-    try:
-        if args.file:
-            f = open('mom', 'wb')
-            f.write(args.file.read())
-            f.close()
-        else: fopen = open('mom','rb')    
-            
-    except Exception as ex:
-        if args.file:
-            f = open('mom', 'wb')
-            f.write(args.file.read())
-            f.close()    
-        else: print ex    
-    
-    if args.test:
-        parser = ShowMom(fopen)
-        parser.showMim()
-
 class ShowMom(IterParser):
     def __init__(self, name):
         IterParser.__init__(self, name)
-        argParse()
         self.line = "*" * 200
 #         self.mo = mom.mo
 #         self.attr = mom.attr
@@ -100,6 +73,8 @@ class ShowMom(IterParser):
                     getMo = self.mos[moc]
                     print self.line,'\n',"MO =", getMo.getName()
                     print "description =".ljust(10), getMo.getDesc()
+
+
             
         if mo is not None and attr is None:
             p = re.compile(mo, re.IGNORECASE)
@@ -137,21 +112,47 @@ class ShowMom(IterParser):
     def showValue(self):
         pass
 
-#     def showValue(self):
-#         pass
-#     
-#     def showValue(self):
-#         pass
-#     
-#     def showValue(self):
-#         pass
-#     
-#     def showValue(self):
-#         pass
-   
+def argParse():
+	if args.file:
+		f = open('mom', 'wb')
+		f.write(args.file.read())
+		f.close()
+	
+	if args.all:
+		fopen = open('mom','rb')
+		parser = ShowMom(fopen)
+		parser.showMim()
+		parser.showMom()
+
+	if args.description:
+		fopen = open('mom','rb')
+		parser = ShowMom(fopen)
+		parser.showMim()
+		parser.showDesc(args.mo, args.attr) 
+
+	if args.test:
+		fopen = open('mom','rb')
+		parser = ShowMom(fopen)
+		parser.showMim()
+		parser.showMom(args.mo, args.attr) 
+	
+
+parser = argparse.ArgumentParser(description = 'mom handling')
+parser.add_argument('-i', dest ='file', action = 'store', type = argparse.FileType('r'), help = 'input file in -i option')
+parser.add_argument('-mo', dest = 'mo', action = 'store', help = 'add mo name')
+parser.add_argument('-attr', dest = 'attr', action = 'store', help = 'add attribute name')
+parser.add_argument('-d', dest ='description', action = 'store_true')
+parser.add_argument('-a', dest ='all', action = 'store_true')
+parser.add_argument('-t', dest ='test', action = 'store_true')
+args = parser.parse_args()  
+
+argParse()
+
+'''   
 if __name__ == '__main__':
     name = "LteRbsNodeComplete_Itr27_R10D03.xml"
     parser = ShowMom(name)
     parser.showMim()
 #     parser.showMom(mo='nbiot', attr='id$')
     parser.showDesc(mo = 'cellre',attr='id$')
+	'''
