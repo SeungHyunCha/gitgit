@@ -4,8 +4,8 @@ import argparse
 # from io import StringIO
 
 parser = argparse.ArgumentParser()
-# parser.add_argument('mo', type = str, action = 'store', default = '', help = 'mo name')
-# parser.add_argument('attr', type = str, action = 'store', default = '', help = 'attribute name')
+# parser.add_argument('mo', type = str, action = 'store', default = None, help = 'mo name')
+# parser.add_argument('attr', type = str, action = 'store', default = None, help = 'attribute name')
 # parser.add_argument('-d', dest = 'momd', action = 'store_true', help = 'show mo name')
 mom = parser.parse_args()
 
