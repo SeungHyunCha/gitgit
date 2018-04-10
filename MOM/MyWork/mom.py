@@ -1,17 +1,37 @@
 from MOMParser import IterParser
 import re 
 import argparse
-# from io import StringIO
 
-parser = argparse.ArgumentParser()
-# parser.add_argument('mo', type = str, action = 'store', default = None, help = 'mo name')
-# parser.add_argument('attr', type = str, action = 'store', default = None, help = 'attribute name')
-# parser.add_argument('-d', dest = 'momd', action = 'store_true', help = 'show mo name')
-mom = parser.parse_args()
+def argParse():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-i', dest ='file', action = 'store', type=argparse.FileType('r'))
+    parser.add_argument('-d', dest ='test', action = 'store_true')
+    # parser.add_argument('mo', type = str, action = 'store', default = None, help = 'mo name')
+    # parser.add_argument('attr', type = str, action = 'store', default = None, help = 'attribute name')
+    args = parser.parse_args()      
+    
+    try:
+        if args.file:
+            f = open('mom', 'wb')
+            f.write(args.file.read())
+            f.close()
+        else: fopen = open('mom','rb')    
+            
+    except Exception as ex:
+        if args.file:
+            f = open('mom', 'wb')
+            f.write(args.file.read())
+            f.close()    
+        else: print ex    
+    
+    if args.test:
+        parser = ShowMom(fopen)
+        parser.showMim()
 
 class ShowMom(IterParser):
     def __init__(self, name):
         IterParser.__init__(self, name)
+        argParse()
         self.line = "*" * 200
 #         self.mo = mom.mo
 #         self.attr = mom.attr
