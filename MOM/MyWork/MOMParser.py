@@ -1,5 +1,5 @@
 import xml.etree.ElementTree as ET
-import re
+from collections import defaultdict
 
 class IterParser:
     def __init__(self, name):
@@ -13,7 +13,7 @@ class IterParser:
         self.exceps = {}
         self.expmembers = {}
         self.mim = {}
-        self.relations = {}
+        self.relations = []
         self.__run()
         
     def __run(self):
@@ -35,10 +35,12 @@ class IterParser:
                     self.mim = elem.attrib
                 else: 
                     if elem.tag == 'relationship':
+                        relationname = Tree(elem)
+#                         self.relations[] = relationname
                         temp = elem.attrib.values()[0]
                         temp= temp.split('_to_')
-                        temp= {temp[0]:temp[1]}
-                        self.relations.update(temp)
+                        temp= (temp[0],temp[1])
+                        self.relations.append(temp)
                         
             elif event == 'end': # add infomation in obj
                 if elem.tag == 'class':
@@ -75,57 +77,7 @@ class IterParser:
                             excepname.addAttrs(child)
                 else: pass
             else: pass
-'''
-    def mom(self, mo="", attr=""): # print element
-        line = "*" * 200
-        print line
-        print 'name:"%s"' % self.mim['name'], 'version:"%s"' % self.mim['version'], 'release:"%s"' %self.mim['release'], 'author:"%s"' %self.mim['author'], 'revision:"%s"' %self.mim['revision']
-        if mo == "":   
-            if attr == "": 
-                # show mo, enum, struct, exception
-                print line,'\n',"MO".ljust(30),'\n',line
-                for mo in self.mos:
-                    print mo
-                print '\n', line,'\n',"ENUM".ljust(30),'\n',line
-                for enum in self.enums:
-                    print enum
-                   
-            else:
-                print line,'\n',"MOC".ljust(30), 'Attribute'.ljust(30), 'defaultValue'.ljust(30), 'Flags'.ljust(30), 'Range'.ljust(30)
-                print line
-                p = re.compile(attr, re.IGNORECASE)
-                for attr_name in self.attrs:
-                    check = p.search(attr_name)
-                    if check:
-                        getAttr = self.attrs[attr_name]
-#                         print getAttr.getMoName().ljust(30), getAttr.getName().ljust(30), getAttr.getValues(), getAttr.getFlags().ljust(30), getAttr.getRange()
-                        print getAttr.getMoName().ljust(30), getAttr.getName().ljust(30), getAttr.getFlags().ljust(40), getAttr.getLength().ljust(20), getAttr.getValues().ljust(20), getAttr.getRange()
-                            
-                    else:
-                        pass
-                        
-        else:
-            p = re.compile(mo, re.IGNORECASE)
-            for moc in self.mos:
-                check = p.search(moc)
-                if check:   
-                    getMo = self.mos[moc]
-                    if attr == "":
-                        getMo.showMoInfo()
-                    else:
-                        print line,'\n',"MOC".ljust(30), 'Attribute'.ljust(30), 'Flags'.ljust(40), 'length'.ljust(20), 'default'.ljust(20), 'Range'
-                        print line
-                        m = re.compile(attr, re.IGNORECASE)
-                        attr_list = getMo.getAttrs()
-                        for attr_name in sorted(attr_list):
-                            check1 = m.search(attr_name)
-                            if check1:
-                                getAttr = attr_list[attr_name]
-                                print getAttr.mo.ljust(30), getAttr.getName().ljust(30), getAttr.getFlags().ljust(40), getAttr.getLength().ljust(20), getAttr.getValues().ljust(20), getAttr.getRange()
-                            else:
-                                pass
-                else: pass
-'''       
+
 class Mo:
     def __init__(self, elem):
         self.name = elem.attrib.values()[0]
@@ -292,7 +244,7 @@ class Attr:
                     self.types = data.getType()
                     
         if 'visibility' in self.others:
-                    self.flags.append('EricssonOnly')
+            self.flags.append('EricssonOnly')
                     
 class DataType:
     def __init__(self, attr):
@@ -386,23 +338,46 @@ class DataType:
 class Enum(Mo): pass
 class Struct(Mo): pass
 class MyException(Mo): pass
- 
+
+class Tree:
+    def __init__(self, elem):
+        self.obj = elem
+        self.temp_name = elem.attrib.values()[0]
+        self.cardi = None
+        self.relation = None
+        self.__getRelation()
+        self.__getCardi()
+    
+    def __getRelation(self):
+        temp = self.temp_name.split('_to_')
+        temp = (temp[0],temp[1])
+        self.relation = temp
+    
+    def __test(self):
+        pass
+    
+    def __getCardi(self):
+        for child in self.obj:
+            for gchild in child:
+                for ggchild in gchild:
+                    if ggchild.tag == 'cardinality':
+                        pass#print 'ggchild', ggchild
+                   
 def testcase():
     name = "LteRbsNodeComplete_Itr27_R10D03.xml"
-#     name = "sample.xml"
     parser = IterParser(name)
-    parser.mom()
-#     parser.mom()
-#     parser.mom(mo='nbiot')
-#     parser.mom(mo='nbiot', attr='pm')
-#     parser.mom(mo='utrancelltdd', attr='pmradio')
-#     parser.mom(attr='id$')
-#     parser.mom(attr='^freq')
-#     parser.mom(attr='^nbiot')
-#     parser.mom(mo='Rcs',attr='t')
-#     parser.mom(mo='ReportConfigA1Sec')
-#     parser.mom(mo='ReportConfigA1Sec', attr='r')
-#     parser.mom(mo='ReportConfigA1Sec', attr='r')
+    d = defaultdict(list)
+    for key, value in parser.relations:
+        d[key].append(value)
+    print d
+#     del_list = []
+    for parent_mo, list_child in sorted(d.items()):
+        for child_mo in list_child:
+            if child_mo in d.keys():
+                d[parent_mo].remove(child_mo)
+                d[parent_mo].append((child_mo, d[child_mo]))
+#                 del_list.append(child_mo)
+    print d
 
 if __name__ == '__main__':
     testcase()

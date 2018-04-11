@@ -6,8 +6,6 @@ class ShowMom(IterParser):
     def __init__(self, name):
         IterParser.__init__(self, name)
         self.line = "*" * 200
-#         self.mo = mom.mo
-#         self.attr = mom.attr
     
     def showMim(self):
         print self.line
@@ -112,31 +110,32 @@ class ShowMom(IterParser):
     def showValue(self):
         pass
 
+# add argparse operation
 def argParse():
-	if args.file:
-		f = open('mom', 'wb')
-		f.write(args.file.read())
-		f.close()
-	
-	if args.all:
-		fopen = open('mom','rb')
-		parser = ShowMom(fopen)
-		parser.showMim()
-		parser.showMom()
+    if args.file:
+        f = open('mom', 'wb')
+        f.write(args.file.read())
+        f.close()
+    
+    if args.all:
+        fopen = open('mom','rb')
+        parser = ShowMom(fopen)
+        parser.showMim()
+        parser.showMom()
+    
+    if args.description:
+        fopen = open('mom','rb')
+        parser = ShowMom(fopen)
+        parser.showMim()
+        parser.showDesc(args.mo, args.attr) 
+    
+    if args.test:
+        fopen = open('mom','rb')
+        parser = ShowMom(fopen)
+        parser.showMim()
+        parser.showMom(args.mo, args.attr) 
 
-	if args.description:
-		fopen = open('mom','rb')
-		parser = ShowMom(fopen)
-		parser.showMim()
-		parser.showDesc(args.mo, args.attr) 
-
-	if args.test:
-		fopen = open('mom','rb')
-		parser = ShowMom(fopen)
-		parser.showMim()
-		parser.showMom(args.mo, args.attr) 
-	
-
+# add argparse command line option
 parser = argparse.ArgumentParser(description = 'mom handling')
 parser.add_argument('-i', dest ='file', action = 'store', type = argparse.FileType('r'), help = 'input file in -i option')
 parser.add_argument('-mo', dest = 'mo', action = 'store', help = 'add mo name')
@@ -145,7 +144,6 @@ parser.add_argument('-d', dest ='description', action = 'store_true')
 parser.add_argument('-a', dest ='all', action = 'store_true')
 parser.add_argument('-t', dest ='test', action = 'store_true')
 args = parser.parse_args()  
-
 argParse()
 
 '''   
