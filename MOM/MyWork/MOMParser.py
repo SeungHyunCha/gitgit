@@ -362,7 +362,20 @@ class Tree:
                 for ggchild in gchild:
                     if ggchild.tag == 'cardinality':
                         pass#print 'ggchild', ggchild
-                   
+
+def test(d):
+    del_list = []
+    for parent_mo, list_child in d.items():
+#         if parent_mo[-3:] is not 'ref':
+        for child_mo in list_child:
+            for check in d.keys():
+                if child_mo == check:
+#             if child_mo in d.keys():
+                    d[parent_mo].remove(child_mo)
+                    d[parent_mo].append((child_mo, d[child_mo]))
+                    del_list.append(child_mo)      
+    return del_list
+          
 def testcase():
     name = "LteRbsNodeComplete_Itr27_R10D03.xml"
     parser = IterParser(name)
@@ -370,13 +383,13 @@ def testcase():
     for key, value in parser.relations:
         d[key].append(value)
     print d
-#     del_list = []
-    for parent_mo, list_child in sorted(d.items()):
-        for child_mo in list_child:
-            if child_mo in d.keys():
-                d[parent_mo].remove(child_mo)
-                d[parent_mo].append((child_mo, d[child_mo]))
-#                 del_list.append(child_mo)
+    del_list = test(d)
+    try:
+        for del1 in del_list:
+            del d[del1]
+    except:
+        pass
+    
     print d
 
 if __name__ == '__main__':
