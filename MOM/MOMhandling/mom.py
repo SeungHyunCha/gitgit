@@ -4,18 +4,14 @@ import argparse
 import os
 import difflib
 
-class ShowMom(IterParser):
+class ParsingMom(IterParser):
     def __init__(self, name):
         IterParser.__init__(self, name)
         self.line = "*" * 132
     
-    def showMim(self):
-        print self.line
-        mim = 'name:%s version:%s release:%s author:%s revision:%s' %(self.mim['name'], self.mim['version'], self.mim['release'], self.mim['author'], self.mim['revision'])
-        return mim
-    
     def showMom(self, mo = None, attr = None):
         show_info = ''
+        show_info += '%s\nname:%s version:%s release:%s author:%s revision:%s\n' %(self.line, self.mim['name'], self.mim['version'], self.mim['release'], self.mim['author'], self.mim['revision'])
         if mo is None and attr is None:
             show_info += '%s\n%s\n%s\n' %(self.line, "MO".ljust(30), self.line)
             for mo in sorted(self.mos):
@@ -70,6 +66,7 @@ class ShowMom(IterParser):
         
     def showDesc(self, mo = None, attr = None):
         show_info = ''
+        show_info += '%s\nname:%s version:%s release:%s author:%s revision:%s\n' %(self.line, self.mim['name'], self.mim['version'], self.mim['release'], self.mim['author'], self.mim['revision'])
         if mo is None and attr is None:
             for moc in sorted(self.mos):
                 if moc is not None:
@@ -120,11 +117,12 @@ class ShowMom(IterParser):
 
 def diff(prev, cur):
     diff = difflib.ndiff(prev, cur)
-    print '\n'.join(list(diff))
+    diff_info = '\n'.join(list(diff))
+    return diff_info
 
 def findPath():
-#     path_dir = '$MY_GIT_TOP/mom/lte/complete'
-    path_dir = '${ERBS_ROOT}/mom/lte/complete'
+    path_dir = '$MY_GIT_TOP/mom/lte/complete'
+#     path_dir = '${ERBS_ROOT}/mom/lte/complete'
     file_list = os.listdir(path_dir)
     for item in file_list:
         if item.find('xml') is not -1:
@@ -146,43 +144,45 @@ def argParse():
         fopen.close()
         
     if args.diff:
-        pass
-        '''
         try: 
             cur_mom = open('mom','rb')
             prev_mom = os.popen('git show HEAD~1:mom/lte/complete/LteRbsNodeComplete.xml')
             
-            if args.all:
-                parser1 = ShowMom(cur_mom)        
-                parser2 = ShowMom(prev_mom)
-                parser1.showMim()
-                parser2.showMim()
+            if args.mom:
+                parser1 = ParsingMom(cur_mom)        
+                parser2 = ParsingMom(prev_mom)
+                cur_str = parser1.showMom(args.mo, args.attr)
+                prev_str = parser2.showMom(args.mo, args.attr)
+                print diff(prev_str, cur_str)
             
+            if args.desc:
+                parser1 = ParsingMom(cur_mom)        
+                parser2 = ParsingMom(prev_mom)
+                cur_str = parser1.showDesc(args.mo, args.attr)
+                prev_str = parser2.showDesc(args.mo, args.attr)
+                print diff(prev_str, cur_str)
+                    
         except Exception as ex:  
             print ex
-        '''
         
     else:
-        if args.all:
-            try: cur_mom = open('mom','rb')
+        if args.mom:
+            try: 
+                cur_mom = open('mom','rb')
+                parser = ParsingMom(cur_mom)
+                print parser.showMom(args.mo, args.attr)
             except Exception as ex: print ex 
-            parser = ShowMom(cur_mom)
-            parser.showMim()
-            parser.showMom()
         
         if args.description:
-            try: cur_mom = open('mom','rb')
+            try: 
+                cur_mom = open('mom','rb')
+                parser = ParsingMom(cur_mom)
+                print parser.showDesc(args.mo, args.attr) 
             except Exception as ex: print ex 
-            parser = ShowMom(cur_mom)
-            parser.showMim()
-            parser.showDesc(args.mo, args.attr) 
         
-        if args.test:
-            cur_mom = open('mom','rb')
-            parser = ShowMom(cur_mom)
-            parser.showMim()
-            parser.showMom(args.mo, args.attr) 
-            
+        if args.tree:
+            pass
+        
 # add argparse command line option
 parser = argparse.ArgumentParser(description = 'Test MOM handling')
 parser.add_argument('-i', dest ='file', action = 'store', type = argparse.FileType('r'), help = 'If you want to show specific MOM version, input filename by using -i option')
@@ -191,8 +191,8 @@ parser.add_argument('-mo', dest = 'mo', action = 'store', help = 'Search specifi
 parser.add_argument('-attr', dest = 'attr', action = 'store', help = 'Search specific attr using -attr option')
 parser.add_argument('-d', dest ='description', action = 'store_true', help = 'Show only description about specific mo')
 parser.add_argument('-diff', dest ='diff', action = 'store_true', help = 'Show difference between current MOM xml and prev MOM xml')
-parser.add_argument('-a', dest ='all', action = 'store_true', help = 'Show all information in MOM')
-parser.add_argument('-t', dest ='test', action = 'store_true', help = 'Show properties about specific mo') 
+parser.add_argument('-a', dest ='mom', action = 'store_true', help = 'Show all information in MOM')
+parser.add_argument('-t', dest ='tree', action = 'store_true', help = 'Show relationship between MOs') 
 args = parser.parse_args()  
 argParse()
 
@@ -200,7 +200,6 @@ if __name__ == '__main__':
     pass
 #     name = "LteRbsNodeComplete_Itr27_R10D03.xml"
 #     parser = ShowMom(name)
-#     print parser.showMim()
 #     print parser.showMom(mo='nbiot')
 #     print parser.showMom(mo='nbiot', attr='cell')
 #     print parser.showDesc(mo='nbiot')
