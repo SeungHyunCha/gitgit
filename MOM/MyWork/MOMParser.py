@@ -140,15 +140,20 @@ class Mo:
             else: pass
     
     def showMoInfo(self):
-        line = "*" * 120
-        print line,'\n', "MOC", '\n', line
-        print self.name
-        for flag in sorted(self.flags): print flag
-        for key in sorted(self.others): print "%s\t%s" %(key, self.others[key]) 
-        print line,'\n',"Attribute".ljust(30), "Type".ljust(40), 'Flags', '\n', line
+        show_info = ''
+        line = "*" * 132
+        show_info += '%s\nMOC\n%s\n' %(line, line)
+        show_info += '%s\n' % self.name
+        for flag in sorted(self.flags): 
+            show_info += '%s\n' % flag
+        for key in sorted(self.others): 
+            show_info += "%s\t%s\n" %(key, self.others[key]) 
+        show_info += '%s\n%s%s%s\n%s\n' %(line, "Attribute".ljust(30), "Type".ljust(40), 'Flags', line)
+#         show_info += line + '\n' + "Attribute".ljust(30) + "Type".ljust(40) + 'Flags' + '\n' + line + '\n'
         for key, value in sorted(self.attrs_obj.items()): 
-            print key.ljust(30), value.getType().ljust(40), value.getFlags()
-        
+            show_info += key.ljust(30) + value.getType().ljust(40) + value.getFlags() + '\n'
+        return show_info
+    
 class Attr:
     def __init__(self, elem):
         self.name = elem.attrib.values()[0]
@@ -179,7 +184,7 @@ class Attr:
         if temp[0] == []:
             del temp[0]
         temp = ','.join(temp)
-        return temp
+        return str(temp)
     
     def getType(self):
         if self.types == {}:
