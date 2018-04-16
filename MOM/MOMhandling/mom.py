@@ -3,6 +3,15 @@ import re
 import argparse
 import os
 import difflib
+'''
+try:
+    from colorama import Fore, Back, Style, init
+    init()
+except ImportError:  # fallback so that the imported classes always exist
+    class ColorFallback():
+        __getattr__ = lambda self, name: ''
+    Fore = Back = Style = ColorFallback()
+'''
 
 class ParsingMom(IterParser):
     def __init__(self, name):
@@ -115,20 +124,39 @@ class ParsingMom(IterParser):
     def showValue(self):
         pass
 
-def diff(prev, cur):
-    diff = difflib.ndiff(prev, cur)
-    diff_info = '\n'.join(list(diff))
-    return diff_info
 
+def diff(prev, cur):
+    diff = difflib.ndiff(prev.splitlines(), cur.splitlines())
+    diff_info = ''.join(list(diff))
+    return diff_info
+'''
+def diff(prev, cur):
+    diff = difflib.ndiff(prev.splitlines(), cur.splitlines())
+    #diff = difflib.ndiff(prev, cur)
+    
+    diff_info = '\n'.join(list(diff))
+    rdiff = '' 
+    for line in diff_info:
+        if line.startswith('+'):
+            rdiff += Fore.GREEN + line + Fore.RESET
+        elif line.startswith('-'):
+            rdiff += Fore.RED + line + Fore.RESET
+        elif line.startswith('^'):
+            rdiff += Fore.BLUE + line + Fore.RESET
+        else:
+            rdiff += line
+    #diff_info = '\n'.join(list(rdiff))
+    return rdiff
+'''
 def findPath():
     path_dir = '$MY_GIT_TOP/mom/lte/complete'
-#     path_dir = '${ERBS_ROOT}/mom/lte/complete'
+#     path_dir = '/repo/echaseu/racoam/mom/lte/complete'
     file_list = os.listdir(path_dir)
     for item in file_list:
         if item.find('xml') is not -1:
             return item 
 
-# add argparse operation
+#add argparse operation
 def argParse():
     if args.file:
         cur_mom = open('mom', 'wb')
@@ -136,34 +164,41 @@ def argParse():
         cur_mom.close()
 
     if args.currentMOM:
-        filename = findPath()
-        fopen = open(filename, 'r')
+        filename = os.popen('cat $MY_GIT_TOP/mom/lte/complete/LteRbsNodeComplete.xml')
         cur_mom = open('mom', 'wb')
-        cur_mom.write(fopen.read())
+        cur_mom.write(filename.read())
         cur_mom.close()
-        fopen.close()
-        
+
     if args.diff:
         try: 
             cur_mom = open('mom','rb')
-            prev_mom = os.popen('git show HEAD~1:mom/lte/complete/LteRbsNodeComplete.xml')
+            commit = os.popen('git log --oneline $MY_GIT_TOP/mom/lte/complete/LteRbsNodeComplete.xml')
+            prev_commit = commit.readline()
+            prev_commit = commit.readline()
+            prev_commit = prev_commit.split(' ')[0]
+            read_prev_mom = os.popen('git show {}:mom/lte/complete/LteRbsNodeComplete.xml'.format(prev_commit))
+            prev_mom = open('prevmom','wb')
+            prev_mom.write(read_prev_mom.read())
+            prev_mom.close()
+            prev_mom = open('prevmom','rb')
             
             if args.mom:
                 parser1 = ParsingMom(cur_mom)        
                 parser2 = ParsingMom(prev_mom)
                 cur_str = parser1.showMom(args.mo, args.attr)
                 prev_str = parser2.showMom(args.mo, args.attr)
-                print diff(prev_str, cur_str)
-            
-            if args.desc:
+                diff_file =  diff(prev_str, cur_str)
+                print diff_file
+                
+            if args.description:
                 parser1 = ParsingMom(cur_mom)        
                 parser2 = ParsingMom(prev_mom)
                 cur_str = parser1.showDesc(args.mo, args.attr)
                 prev_str = parser2.showDesc(args.mo, args.attr)
-                print diff(prev_str, cur_str)
-                    
-        except Exception as ex:  
-            print ex
+                diff_file =  diff(prev_str, cur_str)
+                print diff_file
+
+        except Exception as ex: print ex
         
     else:
         if args.mom:
