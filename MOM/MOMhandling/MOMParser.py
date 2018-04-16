@@ -165,7 +165,7 @@ class Attr:
     
     def getDesc(self):
         try:
-            desc = self.others.__dict__['description']
+            desc = self.others['description']
             return desc
         except: pass
         
@@ -261,6 +261,7 @@ class DataType:
         self.flags = []
         self.types = None
         self.length = {}
+        self.stringlength = {}
         self.range = {}
         self.ranges = []
         self.values = {}

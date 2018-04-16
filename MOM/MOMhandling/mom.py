@@ -28,7 +28,7 @@ class ParsingMom(IterParser):
                     attr_list = getMo.getAttrs()
                     for attr_name in sorted(attr_list):
                         getAttr = attr_list[attr_name]
-                        show_info += '%s%s%s%s%s%s\n' % (getAttr.getMoName().ljust(30), getAttr.getName().ljust(30), getAttr.getValues().ljust(20), getAttr.getFlags().ljust(40), getAttr.getLength().ljust(20), getAttr.getRange())
+                        show_info += '%s%s%s%s%s%s\n' % (getAttr.getMoName().ljust(30), getAttr.getName().ljust(30), getAttr.getDefault().ljust(20), getAttr.getFlags().ljust(40), getAttr.getLength().ljust(20), getAttr.getRange())
         
         if mo is not None and attr is None:
             p = re.compile(mo, re.IGNORECASE)
@@ -45,7 +45,7 @@ class ParsingMom(IterParser):
                 check = p.search(attr_name)
                 if check:
                     getAttr = self.attrs[attr_name]
-                    show_info += '%s%s%s%s%s%s\n' % (getAttr.getMoName().ljust(30), getAttr.getName().ljust(30), getAttr.getValues().ljust(20), getAttr.getFlags().ljust(40), getAttr.getLength().ljust(20), getAttr.getRange())
+                    show_info += '%s%s%s%s%s%s\n' % (getAttr.getMoName().ljust(30), getAttr.getName().ljust(30), getAttr.getDefault().ljust(20), getAttr.getFlags().ljust(40), getAttr.getLength().ljust(20), getAttr.getRange())
         
         if mo is not None and attr is not None:
             p = re.compile(mo, re.IGNORECASE)
@@ -60,7 +60,7 @@ class ParsingMom(IterParser):
                         check1 = m.search(attr_name)
                         if check1:
                             getAttr = attr_list[attr_name]
-                            show_info += '%s%s%s%s%s%s\n' % (getAttr.getMoName().ljust(30), getAttr.getName().ljust(30), getAttr.getValues().ljust(20), getAttr.getFlags().ljust(40), getAttr.getLength().ljust(20), getAttr.getRange())
+                            show_info += '%s%s%s%s%s%s\n' % (getAttr.getMoName().ljust(30), getAttr.getName().ljust(30), getAttr.getDefault().ljust(20), getAttr.getFlags().ljust(40), getAttr.getLength().ljust(20), getAttr.getRange())
         return show_info
         
     def showDesc(self, mo = None, attr = None):
@@ -211,7 +211,7 @@ def argParse():
 # add argparse command line option
 parser = argparse.ArgumentParser(description = 'Test MOM handling')
 parser.add_argument('-i', dest ='file', action = 'store', type = argparse.FileType('r'), help = 'If you want to show specific MOM version, input filename by using -i option')
-parser.add_argument('version', action = 'store', type = int, help = 'Choose G1 or G2 by num')
+# parser.add_argument('version', action = 'store', type = int, help = 'Choose G1 or G2 by num(G1=1, G2=2)')
 parser.add_argument('-p', dest ='currentMOM', action = 'store_true', help = 'Load current MOM by using -p option')
 parser.add_argument('-mo', dest = 'mo', action = 'store', help = 'Search specific mo using -mo option')
 parser.add_argument('-attr', dest = 'attr', action = 'store', help = 'Search specific attr using -attr option')
@@ -223,13 +223,12 @@ args = parser.parse_args()
 argParse()
 
 if __name__ == '__main__':
-    pass
-#     name = "LteRbsNodeComplete_Itr27_R10D03.xml"
-#     parser = ShowMom(name)
+    name = "LteRbsNodeComplete_Itr27_R10D03.xml"
+    parser = ParsingMom(name)
 #     print parser.showMom(mo='nbiot')
 #     print parser.showMom(mo='nbiot', attr='cell')
 #     print parser.showDesc(mo='nbiot')
-#     print parser.showDesc(attr='id$')
+    print parser.showDesc(attr='id$')
 #     print parser.showDesc(mo='nbiot', attr='cell')
 #     print parser.showMom(attr='id$')
 #     print parser.showMom()
