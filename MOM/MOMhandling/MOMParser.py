@@ -13,6 +13,7 @@ class IterParser:
         self.exceps = {}
         self.expmembers = {}
         self.mim = {}
+        self.count = 0
         self.relations = []
         self.__run()
         
@@ -32,7 +33,11 @@ class IterParser:
                     excepname = MyException(elem)
                     self.exceps[excepname.getName()] = excepname
                 elif elem.tag == 'mim': # mim version
-                    self.mim = elem.attrib
+                    if self.count == 0:
+                        self.mim = elem.attrib
+                        self.count = 1
+                    else: pass
+                    
                 else: 
                     if elem.tag == 'relationship':
                         relationname = Tree(elem)
@@ -41,7 +46,6 @@ class IterParser:
                         temp= temp.split('_to_')
                         temp= (temp[0],temp[1])
                         self.relations.append(temp)
-                    else: pass
                         
             elif event == 'end': # add infomation in obj
                 if elem.tag == 'class':
@@ -257,7 +261,6 @@ class DataType:
         self.flags = []
         self.types = None
         self.length = {}
-        self.stringlength = {}
         self.range = {}
         self.ranges = []
         self.values = {}
@@ -385,8 +388,7 @@ def test(d):
     return del_list
           
 def testcase():
-#     name = "LteRbsNodeComplete_Itr27_R10D03.xml"
-    name = "Lrat_DWAXE_mp_Itr27_R10E02.xml"
+    name = "LteRbsNodeComplete_Itr27_R10D03.xml"
     parser = IterParser(name)
     d = defaultdict(list)
     for key, value in parser.relations:

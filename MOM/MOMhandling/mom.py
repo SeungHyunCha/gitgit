@@ -3,15 +3,6 @@ import re
 import argparse
 import os
 import difflib
-'''
-try:
-    from colorama import Fore, Back, Style, init
-    init()
-except ImportError:  # fallback so that the imported classes always exist
-    class ColorFallback():
-        __getattr__ = lambda self, name: ''
-    Fore = Back = Style = ColorFallback()
-'''
 
 class ParsingMom(IterParser):
     def __init__(self, name):
@@ -37,7 +28,7 @@ class ParsingMom(IterParser):
                     attr_list = getMo.getAttrs()
                     for attr_name in sorted(attr_list):
                         getAttr = attr_list[attr_name]
-                        show_info += '%s%s%s%s%s%s\n' % (getAttr.getMoName().ljust(30), getAttr.getName().ljust(30), getAttr.getDefault().ljust(20), getAttr.getFlags().ljust(40), getAttr.getLength().ljust(20), getAttr.getRange())
+                        show_info += '%s%s%s%s%s%s\n' % (getAttr.getMoName().ljust(30), getAttr.getName().ljust(30), getAttr.getValues().ljust(20), getAttr.getFlags().ljust(40), getAttr.getLength().ljust(20), getAttr.getRange())
         
         if mo is not None and attr is None:
             p = re.compile(mo, re.IGNORECASE)
@@ -54,7 +45,7 @@ class ParsingMom(IterParser):
                 check = p.search(attr_name)
                 if check:
                     getAttr = self.attrs[attr_name]
-                    show_info += '%s%s%s%s%s%s\n' % (getAttr.getMoName().ljust(30), getAttr.getName().ljust(30), getAttr.getDefault().ljust(20), getAttr.getFlags().ljust(40), getAttr.getLength().ljust(20), getAttr.getRange())
+                    show_info += '%s%s%s%s%s%s\n' % (getAttr.getMoName().ljust(30), getAttr.getName().ljust(30), getAttr.getValues().ljust(20), getAttr.getFlags().ljust(40), getAttr.getLength().ljust(20), getAttr.getRange())
         
         if mo is not None and attr is not None:
             p = re.compile(mo, re.IGNORECASE)
@@ -69,7 +60,7 @@ class ParsingMom(IterParser):
                         check1 = m.search(attr_name)
                         if check1:
                             getAttr = attr_list[attr_name]
-                            show_info += '%s%s%s%s%s%s\n' % (getAttr.getMoName().ljust(30), getAttr.getName().ljust(30), getAttr.getDefault().ljust(20), getAttr.getFlags().ljust(40), getAttr.getLength().ljust(20), getAttr.getRange())
+                            show_info += '%s%s%s%s%s%s\n' % (getAttr.getMoName().ljust(30), getAttr.getName().ljust(30), getAttr.getValues().ljust(20), getAttr.getFlags().ljust(40), getAttr.getLength().ljust(20), getAttr.getRange())
         return show_info
         
     def showDesc(self, mo = None, attr = None):
@@ -129,28 +120,8 @@ def diff(prev, cur):
     diff_info = '\n'.join(list(diff))
     return diff_info
 
-'''
-def diff(prev, cur):
-    diff = difflib.ndiff(prev.splitlines(), cur.splitlines())
-    #diff = difflib.ndiff(prev, cur)
-    
-    diff_info = '\n'.join(list(diff))
-    rdiff = '' 
-    for line in diff_info:
-        if line.startswith('+'):
-            rdiff += Fore.GREEN + line + Fore.RESET
-        elif line.startswith('-'):
-            rdiff += Fore.RED + line + Fore.RESET
-        elif line.startswith('^'):
-            rdiff += Fore.BLUE + line + Fore.RESET
-        else:
-            rdiff += line
-    #diff_info = '\n'.join(list(rdiff))
-    return rdiff
-'''
 def findPath():
     path_dir = '$MY_GIT_TOP/mom/lte/complete'
-#     path_dir = '/repo/echaseu/racoam/mom/lte/complete'
     file_list = os.listdir(path_dir)
     for item in file_list:
         if item.find('xml') is not -1:
@@ -159,24 +130,37 @@ def findPath():
 #add argparse operation
 def argParse():
     if args.file:
-        cur_mom = open('mom', 'wb')
+        if args.version == 1:
+            cur_mom = open('mom', 'wb')
+        if args.version == 2:
+            cur_mom = open('mom2', 'wb')
         cur_mom.write(args.file.read())
         cur_mom.close()
 
     if args.currentMOM:
-        filename = os.popen('cat $MY_GIT_TOP/mom/lte/complete/LteRbsNodeComplete.xml')
-        cur_mom = open('mom', 'wb')
+        if args.version == 1:
+            filename = os.popen('cat $MY_GIT_TOP/mom/lte/complete/LteRbsNodeComplete.xml')
+            cur_mom = open('mom', 'wb')
+        if args.version == 2:
+            filename = os.popen('cat $MY_GIT_TOP/mom/lrat/output/Lrat_DWAXE_mp.xml')
+            cur_mom = open('mom2', 'wb')
         cur_mom.write(filename.read())
         cur_mom.close()
 
     if args.diff:
-        try: 
-            cur_mom = open('mom','rb')
-            commit = os.popen('git log --oneline $MY_GIT_TOP/mom/lte/complete/LteRbsNodeComplete.xml')
-            prev_commit = commit.readline()
-            prev_commit = commit.readline()
-            prev_commit = prev_commit.split(' ')[0]
-            read_prev_mom = os.popen('git show {}:mom/lte/complete/LteRbsNodeComplete.xml'.format(prev_commit))
+        try:
+            if args.version == 1:
+                cur_mom = open('mom','rb')
+                commit = os.popen('git log --oneline $MY_GIT_TOP/mom/lte/complete/LteRbsNodeComplete.xml')
+                prev_commit = commit.readlines()[1]
+                prev_commit = prev_commit.split(' ')[0]
+                read_prev_mom = os.popen('git show %s:mom/lte/complete/LteRbsNodeComplete.xml' %prev_commit)
+            if args.version == 2:
+                cur_mom = open('mom2','rb')
+                commit = os.popen('git log --oneline $MY_GIT_TOP/mom/lrat/output/Lrat_DWAXE_mp.xml')
+                prev_commit = commit.readlines()[1]
+                prev_commit = prev_commit.split(' ')[0]
+                read_prev_mom = os.popen('git show %s:mom/lrat/output/Lrat_DWAXE_mp.xml' %prev_commit)
             prev_mom = open('prevmom','wb')
             prev_mom.write(read_prev_mom.read())
             prev_mom.close()
@@ -203,14 +187,20 @@ def argParse():
     else:
         if args.mom:
             try: 
-                cur_mom = open('mom','rb')
+                if args.version == 1:
+                    cur_mom = open('mom','rb')
+                if args.version == 2:
+                    cur_mom = open('mom2','rb')
                 parser = ParsingMom(cur_mom)
                 print parser.showMom(args.mo, args.attr)
             except Exception as ex: print ex 
         
         if args.description:
             try: 
-                cur_mom = open('mom','rb')
+                if args.version == 1:
+                    cur_mom = open('mom','rb')
+                if args.version == 2:
+                    cur_mom = open('mom2','rb')
                 parser = ParsingMom(cur_mom)
                 print parser.showDesc(args.mo, args.attr) 
             except Exception as ex: print ex 
@@ -221,6 +211,7 @@ def argParse():
 # add argparse command line option
 parser = argparse.ArgumentParser(description = 'Test MOM handling')
 parser.add_argument('-i', dest ='file', action = 'store', type = argparse.FileType('r'), help = 'If you want to show specific MOM version, input filename by using -i option')
+parser.add_argument('version', action = 'store', type = int, help = 'Choose G1 or G2 by num')
 parser.add_argument('-p', dest ='currentMOM', action = 'store_true', help = 'Load current MOM by using -p option')
 parser.add_argument('-mo', dest = 'mo', action = 'store', help = 'Search specific mo using -mo option')
 parser.add_argument('-attr', dest = 'attr', action = 'store', help = 'Search specific attr using -attr option')
@@ -232,12 +223,11 @@ args = parser.parse_args()
 argParse()
 
 if __name__ == '__main__':
+    pass
 #     name = "LteRbsNodeComplete_Itr27_R10D03.xml"
-    name = "Lrat_DWAXE_mp_Itr27_R10E02.xml"
-    parser = ParsingMom(name)
-#     print parser.showMom(mo='enodebfunction')
+#     parser = ShowMom(name)
 #     print parser.showMom(mo='nbiot')
-    print parser.showMom(mo='cellfdd', attr='cell')
+#     print parser.showMom(mo='nbiot', attr='cell')
 #     print parser.showDesc(mo='nbiot')
 #     print parser.showDesc(attr='id$')
 #     print parser.showDesc(mo='nbiot', attr='cell')
