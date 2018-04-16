@@ -127,8 +127,9 @@ class ParsingMom(IterParser):
 
 def diff(prev, cur):
     diff = difflib.ndiff(prev.splitlines(), cur.splitlines())
-    diff_info = ''.join(list(diff))
+    diff_info = '\n'.join(list(diff))
     return diff_info
+
 '''
 def diff(prev, cur):
     diff = difflib.ndiff(prev.splitlines(), cur.splitlines())
