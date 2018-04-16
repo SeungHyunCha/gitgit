@@ -41,6 +41,7 @@ class IterParser:
                         temp= temp.split('_to_')
                         temp= (temp[0],temp[1])
                         self.relations.append(temp)
+                    else: pass
                         
             elif event == 'end': # add infomation in obj
                 if elem.tag == 'class':
@@ -82,9 +83,8 @@ class Mo:
     def __init__(self, elem):
         self.name = elem.attrib.values()[0]
         self.attrs_obj = {}
-#         self.attrs_info = {}
-        self.flags = []
-        self.others = {}
+        self.flags = [] # systemcreated
+        self.others = {} # description, etc
         self.parent = None
         self.child = None
         self.obj = elem
@@ -94,13 +94,19 @@ class Mo:
         return self.name
     
     def getDesc(self):
-        for desc in self.others: 
-            if desc == 'description':
-                desc = self.others[desc]
-                return desc
+        try:
+            desc = self.others['description']
+            return desc
+        except: pass
     
-    def getTag(self):
-        return self.obj.tag
+    def getFlags(self):
+        temp = sorted(self.flags)
+        try: 
+            if temp[0] == []:
+                del temp[0]
+        except: pass
+        temp = ','.join(temp)
+        return str(temp)
     
     def addAttrs(self, attr):
         self.attrs_obj[attr.getName()] = attr
@@ -108,48 +114,31 @@ class Mo:
     def getAttrs(self): 
         return self.attrs_obj
     
-#     def addAttrsInfo(self, attr):
-#         self.attrs_info[attr.getName()] = attr.__dict__.items()
-    
-#     def getAttrsInfo(self):
-#         return self.attrs_info
-    
-    def addParent(self, name):
-        self.parent = name
-    
-    def addChild(self, name):
-        self.child, name
-    
-    def getParent(self):
-        return self.parent
-    
-    def getChild(self):
-        return self.child
-    
     def handle(self):
+        # To handle MOC except attribute, enumMember, structMember and exceptionParameter
         for mo_child in self.obj:
             if len(mo_child._children) == 0 and mo_child.tag != 'attribute' and 'enumMember' and 'structMember' and 'exceptionParameter':
                 if mo_child.text == None: 
-                    exec "self.%s = {}" % mo_child.tag
                     self.flags.append(mo_child.tag)
-                else: 
+                else:
                     if mo_child.text == '\n\t\t\t\t': pass
                     else: 
-                        exec "self.%s = %r" % (mo_child.tag, mo_child.text)
                         self.others.update({mo_child.tag:mo_child.text})
-            else: pass
+            else: 
+                if mo_child.tag == 'action':
+                    pass
+#                     print 'action', mo_child.text, mo_child.attrib
     
     def showMoInfo(self):
         show_info = ''
         line = "*" * 132
         show_info += '%s\nMOC\n%s\n' %(line, line)
         show_info += '%s\n' % self.name
-        for flag in sorted(self.flags): 
-            show_info += '%s\n' % flag
-        for key in sorted(self.others): 
-            show_info += "%s\t%s\n" %(key, self.others[key]) 
+        if self.getFlags():
+            show_info += '%s\n' % self.getFlags()
+        if self.getDesc():
+            show_info += 'description\t%s\n' % self.getDesc()
         show_info += '%s\n%s%s%s\n%s\n' %(line, "Attribute".ljust(30), "Type".ljust(40), 'Flags', line)
-#         show_info += line + '\n' + "Attribute".ljust(30) + "Type".ljust(40) + 'Flags' + '\n' + line + '\n'
         for key, value in sorted(self.attrs_obj.items()): 
             show_info += key.ljust(30) + value.getType().ljust(40) + value.getFlags() + '\n'
         return show_info
@@ -160,40 +149,40 @@ class Attr:
         self.obj = elem
         self.mo = None
         self.types = None
-        self.flags = []
+        self.flags = [] # readonly, restricted, mandatory, nonPersistent...(etc)
         self.length = {}
         self.range = {}
-        self.values = {}
-        self.others = {}
+        self.values = {} # default, multi, unit....(etc)
+        self.others = {} # description, dependancies...(etc)
         self.__handle()
     
     def getName(self):
         return self.name
     
     def getDesc(self):
-        for desc in self.others: 
-            if desc == 'description':
-                desc = self.others[desc]
-                return desc
-            
+        try:
+            desc = self.others.__dict__['description']
+            return desc
+        except: pass
+        
     def getMoName(self):
         return self.mo
         
     def getFlags(self):
         temp = sorted(self.flags)
-        if temp[0] == []:
-            del temp[0]
+        try: 
+            if temp[0] == []:
+                del temp[0]
+        except: pass
         temp = ','.join(temp)
         return str(temp)
     
     def getType(self):
-        if self.types == {}:
-            return 
+        if self.types == {}: return ''
         else: return str(self.types)
     
     def getLength(self):
-        if self.length == {}:
-            return ''
+        if self.length == {}: return ''
         else: 
             leng = []
             for val in sorted(self.length, reverse=True):
@@ -201,25 +190,38 @@ class Attr:
             return str(leng)
          
     def getRange(self):
-        if self.range == []:
-            return ''
+        if self.range == []: return ''
         else:
             return sorted(self.range)
     
     def getValues(self):
-        if self.values == {}:
-            return ''
+        if self.values == {}: return ''
         else:
             val = []
             for v in sorted(self.values):
                 val.append(self.values[v])
             return str(val)
     
-    def getOthers(self):
-        return self.others
-    
-    def getAttrFlag(self):
-        return sorted(self.flags)
+    def getDefault(self):
+        for key in self.values:
+            if key == 'defaultValue':
+                return str(self.values['defaultValue'])
+            else: pass
+        return ''
+                
+    def getUnit(self):
+        for key in self.values:
+            if key == 'unit':
+                return str(self.values['unit'])
+            else: pass
+        return ''
+
+    def getMulti(self):
+        for key in self.values:
+            if key == 'multiplicationFactor':
+                return str(self.values['multiplicationFactor'])
+            else: pass
+        return ''
     
     def __handle(self):
         for attr in self.obj:
@@ -235,7 +237,6 @@ class Attr:
                         data = DataType(child)
                         self.flags.append(data.getFlags())
                         self.length = data.getLength()
-#                         self.range = data.getRange()
                         self.range = data.getRanges()
                         self.values = data.getValues()
                         self.types = data.getType()
@@ -243,7 +244,6 @@ class Attr:
                     data = DataType(attr)  
                     self.flags.append(data.getFlags())
                     self.length = data.getLength()
-#                     self.range = data.getRange()
                     self.ranges = data.getRanges()
                     self.values = data.getValues()
                     self.types = data.getType()
@@ -257,13 +257,11 @@ class DataType:
         self.flags = []
         self.types = None
         self.length = {}
+        self.stringlength = {}
         self.range = {}
         self.ranges = []
         self.values = {}
         self.__handle()
-    
-    def getData(self):
-        return self.__dict__
     
     def getFlags(self):
         return self.flags
@@ -273,9 +271,6 @@ class DataType:
     
     def getLength(self):
         return self.length
-    
-    def getRange(self):
-        return self.range
     
     def getRanges(self):
         return self.ranges
@@ -293,44 +288,52 @@ class DataType:
                             self.flags = child.tag
                         else: 
                             if child.attrib == {}:
-                                self.types = child.tag
+                                self.types = 'seq(%s)' % child.tag
                             else:
                                 temp = {}
                                 temp = {child.tag:child.attrib.values()[0]}
-                                self.types = temp
+                                self.types = 'seq(%s)' % temp
+                                
                     else:
                         if child._children == []:
                             self.length.update({child.tag:child.text})
                         else:
                             if child.tag == 'long':
-                                self.types = child.tag
+                                self.types = 'seq(%s)' % child.tag
                                 for gchild in child:
                                     if gchild._children == []:
                                         self.values.update({gchild.tag:gchild.text})
                                     else:
                                         for ggchild in gchild:
-                                            self.range.update({ggchild.tag:ggchild.text})
                                             self.ranges.append(int(ggchild.text))
                             else: 
                                 temp = []
                                 for gchild in child:
                                     temp.append(gchild.text)
                                 self.values.update({child.tag:temp})
+                                
             else:
                 for child in self.attr:
                     if child.attrib == {}:
                         if child.tag == 'range':
                             for key in child:
-                                self.range.update({key.tag:key.text})
                                 self.ranges.append(int(key.text))
+                                
                         elif child.tag == 'lengthRange':
                             for key in child:
                                 self.length.update({key.tag:key.text})
+                                
                         else: 
                             if child._children == []:
                                 self.values.update({child.tag:child.text})
-                            else: print 'attr __handle', child.tag, child.text
-                    else: print 'attr __handle', child.tag, child.text
+                            else: 
+                                if child.tag == 'stringLength':
+                                    self.stringlength.update({child.tag:child.text})
+                                print child, child.tag, child.text
+                                for gchild in child:
+                                    print gchild
+                    else: pass
+                    
         else:
             temp = {}
             temp = {self.attr.tag:self.attr.attrib.values()[0]}
@@ -382,7 +385,8 @@ def test(d):
     return del_list
           
 def testcase():
-    name = "LteRbsNodeComplete_Itr27_R10D03.xml"
+#     name = "LteRbsNodeComplete_Itr27_R10D03.xml"
+    name = "Lrat_DWAXE_mp_Itr27_R10E02.xml"
     parser = IterParser(name)
     d = defaultdict(list)
     for key, value in parser.relations:
