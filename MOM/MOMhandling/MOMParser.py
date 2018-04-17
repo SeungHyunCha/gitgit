@@ -1,4 +1,5 @@
 import xml.etree.ElementTree as ET
+from define import *
 from collections import defaultdict
 
 class IterParser:
@@ -19,7 +20,8 @@ class IterParser:
         
     def __run(self):
         for event, elem in ET.iterparse(self.name, events=('start', 'end')):
-            if event == 'start': # create obj for mo, enum, struct, exception
+            # Create obj for mo, enum, struct, exception
+            if event == 'start': 
                 if elem.tag == 'class':
                     moname = Mo(elem)
                     self.mos[moname.getName()] = moname
@@ -32,22 +34,9 @@ class IterParser:
                 elif elem.tag == 'exception': 
                     excepname = MyException(elem)
                     self.exceps[excepname.getName()] = excepname
-                elif elem.tag == 'mim': # mim version
-                    if self.count == 0:
-                        self.mim = elem.attrib
-                        self.count = 1
-                    else: pass
-                    
-                else: 
-                    if elem.tag == 'relationship':
-                        relationname = Tree(elem)
-#                         self.relations[] = relationname
-                        temp = elem.attrib.values()[0]
-                        temp= temp.split('_to_')
-                        temp= (temp[0],temp[1])
-                        self.relations.append(temp)
-                        
-            elif event == 'end': # add infomation in obj
+                else: pass
+            # Add infomation in obj            
+            elif event == 'end': 
                 if elem.tag == 'class':
                     moname.handle()
                     for attr in elem:
@@ -80,6 +69,18 @@ class IterParser:
                             child.mo = excepname.getName()
                             self.expmembers[child.getName()] = child
                             excepname.addAttrs(child)
+                elif elem.tag == 'mim': # mim version
+                    if self.count == 0:
+                        self.mim = elem.attrib
+                        self.count = 1
+                    else: pass
+                elif elem.tag == 'relationship':
+#                         relationname = Tree(elem)
+#                         self.relations[] = relationname
+                        temp = elem.attrib.values()[0]
+                        temp= temp.split('_to_')
+                        temp= (temp[0],temp[1])
+                        self.relations.append(temp)
                 else: pass
             else: pass
 
@@ -88,7 +89,7 @@ class Mo:
         self.name = elem.attrib.values()[0]
         self.attrs_obj = {}
         self.flags = [] # systemcreated
-        self.others = {} # description, etc
+        self.others = {} # description...
         self.parent = None
         self.child = None
         self.obj = elem
@@ -119,7 +120,7 @@ class Mo:
         return self.attrs_obj
     
     def handle(self):
-        # To handle MOC except attribute, enumMember, structMember and exceptionParameter
+        # To add properties of MOC except info of attribute, enumMember, structMember and exceptionParameter
         for mo_child in self.obj:
             if len(mo_child._children) == 0 and mo_child.tag != 'attribute' and 'enumMember' and 'structMember' and 'exceptionParameter':
                 if mo_child.text == None: 
@@ -132,7 +133,8 @@ class Mo:
                 if mo_child.tag == 'action':
                     pass
 #                     print 'action', mo_child.text, mo_child.attrib
-    
+
+    # Show info using only -mo option
     def showMoInfo(self):
         show_info = ''
         line = "*" * 132
@@ -153,11 +155,11 @@ class Attr:
         self.obj = elem
         self.mo = None
         self.types = None
-        self.flags = [] # readonly, restricted, mandatory, nonPersistent...(etc)
-        self.length = {}
-        self.range = {}
-        self.values = {} # default, multi, unit....(etc)
-        self.others = {} # description, dependancies...(etc)
+        self.flags = [] # readonly, restricted, mandatory, nonPersistent...
+        self.length = {} # length
+        self.range = {} # range
+        self.values = {} # default, multi, unit...
+        self.others = {} # description, dependancies...
         self.__handle()
     
     def getName(self):
@@ -387,22 +389,25 @@ def test(d):
                     d[parent_mo].append((child_mo, d[child_mo]))
                     del_list.append(child_mo)      
     return del_list
-          
+
+def combinedTree(relation):
+    d = defaultdict(list)
+    for key, value in relation:
+        if key[-3:] is not 'ref':
+            d[key].append(value)
+    return d
 def testcase():
     name = "LteRbsNodeComplete_Itr27_R10D03.xml"
+#     name = "Lrat_DWAXE_mp_Itr27_R10E02.xml"
     parser = IterParser(name)
-    d = defaultdict(list)
-    for key, value in parser.relations:
-        d[key].append(value)
-    print d
+    d = combinedTree(parser.relations)
     del_list = test(d)
     try:
         for del1 in del_list:
             del d[del1]
-    except:
-        pass
-    
+    except:pass
     print d
+    
 
 if __name__ == '__main__':
     testcase()

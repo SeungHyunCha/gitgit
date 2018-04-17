@@ -1,26 +1,24 @@
 from MOMParser import IterParser
-import re 
-import argparse
-import os
-import difflib
+import re, argparse, os, difflib 
+from define import * 
 
 class ParsingMom(IterParser):
     def __init__(self, name):
         IterParser.__init__(self, name)
         self.line = "*" * 132
-    
+        self.sortMO = sorted(self.mos.keys())
+
     def showMom(self, mo = None, attr = None):
         show_info = ''
         show_info += '%s\nname:%s version:%s release:%s author:%s revision:%s\n' %(self.line, self.mim['name'], self.mim['version'], self.mim['release'], self.mim['author'], self.mim['revision'])
         if mo is None and attr is None:
             show_info += '%s\n%s\n%s\n' %(self.line, "MO".ljust(30), self.line)
-            for mo in sorted(self.mos):
+            for mo in self.sortMO:
                 show_info += '%s\n' % mo
             show_info += '%s\n%s\n%s\n' %(self.line, "ENUM".ljust(30), self.line) 
-            for enum in sorted(self.enums):
-                show_info += '%s\n' % enum
-        
-            for moc in sorted(self.mos):
+#             for enum in sorted(self.enums):
+#                 show_info += '%s\n' % enum
+            for moc in self.sortMO:
                 if moc is not None:
                     getMo = self.mos[moc]
                     show_info += '%s\n' % getMo.showMoInfo()
@@ -32,7 +30,7 @@ class ParsingMom(IterParser):
         
         if mo is not None and attr is None:
             p = re.compile(mo, re.IGNORECASE)
-            for moc in sorted(self.mos):
+            for moc in self.sortMO:
                 check = p.search(moc)
                 if check:   
                     getMo = self.mos[moc]
@@ -49,7 +47,7 @@ class ParsingMom(IterParser):
         
         if mo is not None and attr is not None:
             p = re.compile(mo, re.IGNORECASE)
-            for moc in sorted(self.mos):
+            for moc in self.sortMO:
                 check = p.search(moc)
                 if check:   
                     getMo = self.mos[moc]
@@ -67,7 +65,7 @@ class ParsingMom(IterParser):
         show_info = ''
         show_info += '%s\nname:%s version:%s release:%s author:%s revision:%s\n' %(self.line, self.mim['name'], self.mim['version'], self.mim['release'], self.mim['author'], self.mim['revision'])
         if mo is None and attr is None:
-            for moc in sorted(self.mos):
+            for moc in self.sortMO:
                 if moc is not None:
                     getMo = self.mos[moc]
                     show_info += '%s\n%s%s\n' %(self.line,"MO = ", getMo.getName())
@@ -75,7 +73,7 @@ class ParsingMom(IterParser):
             
         if mo is not None and attr is None:
             p = re.compile(mo, re.IGNORECASE)
-            for moc in sorted(self.mos):
+            for moc in self.sortMO:
                 check = p.search(moc)
                 if check:   
                     getMo = self.mos[moc]
@@ -97,7 +95,7 @@ class ParsingMom(IterParser):
                         
         if mo is not None and attr is not None:
             p = re.compile(mo, re.IGNORECASE)
-            for moc in sorted(self.mos):
+            for moc in self.sortMO:
                 check = p.search(moc)
                 if check:   
                     getMo = self.mos[moc]
@@ -111,103 +109,132 @@ class ParsingMom(IterParser):
                             show_info += '%s%s\n'%("description = ".ljust(10), getAttr.getDesc())
         return show_info
        
-    def showValue(self):
-        pass
-
-
 def diff(prev, cur):
     diff = difflib.ndiff(prev.splitlines(), cur.splitlines())
-    diff_info = '\n'.join(list(diff))
-    return diff_info
-
-def findPath():
-    path_dir = '$MY_GIT_TOP/mom/lte/complete'
-    file_list = os.listdir(path_dir)
-    for item in file_list:
-        if item.find('xml') is not -1:
-            return item 
+    diffstr = ''
+    for line in list(diff):
+        if line.split(' ')[0] == prev:
+            diffstr += red % line
+        elif line.split(' ')[0] == modified:
+            diffstr += yellow % line
+        elif line.split(' ')[0] == new:
+            diffstr += green % line
+        else:
+            pass
+            # if you want to add previous mom, please turn on this sentence
+            #diffstr += '%s\n' % line
+    return diffstr
 
 #add argparse operation
 def argParse():
-    if args.file:
-        if args.version == 1:
+    if args.version == Gen1:
+        if args.file:
             cur_mom = open('mom', 'wb')
-        if args.version == 2:
-            cur_mom = open('mom2', 'wb')
-        cur_mom.write(args.file.read())
-        cur_mom.close()
-
-    if args.currentMOM:
-        if args.version == 1:
-            filename = os.popen('cat $MY_GIT_TOP/mom/lte/complete/LteRbsNodeComplete.xml')
+            cur_mom.write(args.file.read())
+            cur_mom.close()
+            
+        if args.currentMOM:
+            filename = os.popen(Gen1_MOM)
             cur_mom = open('mom', 'wb')
-        if args.version == 2:
-            filename = os.popen('cat $MY_GIT_TOP/mom/lrat/output/Lrat_DWAXE_mp.xml')
-            cur_mom = open('mom2', 'wb')
-        cur_mom.write(filename.read())
-        cur_mom.close()
-
-    if args.diff:
-        try:
-            if args.version == 1:
-                cur_mom = open('mom','rb')
-                commit = os.popen('git log --oneline $MY_GIT_TOP/mom/lte/complete/LteRbsNodeComplete.xml')
-                prev_commit = commit.readlines()[1]
-                prev_commit = prev_commit.split(' ')[0]
-                read_prev_mom = os.popen('git show %s:mom/lte/complete/LteRbsNodeComplete.xml' %prev_commit)
-            if args.version == 2:
-                cur_mom = open('mom2','rb')
-                commit = os.popen('git log --oneline $MY_GIT_TOP/mom/lrat/output/Lrat_DWAXE_mp.xml')
-                prev_commit = commit.readlines()[1]
-                prev_commit = prev_commit.split(' ')[0]
-                read_prev_mom = os.popen('git show %s:mom/lrat/output/Lrat_DWAXE_mp.xml' %prev_commit)
+            cur_mom.write(filename.read())
+            cur_mom.close()
+            
+        if args.diff:
+            cur_mom = open('mom','rb')
+            commit = os.popen(Gen1_commit)
+            prev_commit = commit.readlines()[1]
+            prev_commit = prev_commit.split(' ')[0]
+            read_prev_mom = os.popen(Gen1_prevMOM % prev_commit)
+            
             prev_mom = open('prevmom','wb')
             prev_mom.write(read_prev_mom.read())
             prev_mom.close()
             prev_mom = open('prevmom','rb')
             
             if args.mom:
-                parser1 = ParsingMom(cur_mom)        
-                parser2 = ParsingMom(prev_mom)
-                cur_str = parser1.showMom(args.mo, args.attr)
-                prev_str = parser2.showMom(args.mo, args.attr)
+                parser1 = ParsingMom(prev_mom)
+                parser2 = ParsingMom(cur_mom)        
+                prev_str = parser1.showMom(args.mo, args.attr)
+                cur_str = parser2.showMom(args.mo, args.attr)
                 diff_file =  diff(prev_str, cur_str)
                 print diff_file
                 
             if args.description:
-                parser1 = ParsingMom(cur_mom)        
-                parser2 = ParsingMom(prev_mom)
-                cur_str = parser1.showDesc(args.mo, args.attr)
-                prev_str = parser2.showDesc(args.mo, args.attr)
+                parser1 = ParsingMom(prev_mom)
+                parser2 = ParsingMom(cur_mom)        
+                prev_str = parser1.showDesc(args.mo, args.attr)
+                cur_str = parser2.showDesc(args.mo, args.attr)
                 diff_file =  diff(prev_str, cur_str)
                 print diff_file
+        else:
+            if args.mom:
+                try: 
+                    cur_mom = open('mom','rb')
+                    parser = ParsingMom(cur_mom)
+                    print parser.showMom(args.mo, args.attr)
+                except Exception as ex: print ex 
+            
+            if args.description:
+                try: 
+                    cur_mom = open('mom','rb')
+                    parser = ParsingMom(cur_mom)
+                    print parser.showDesc(args.mo, args.attr) 
+                except Exception as ex: print ex     
+                
+    if args.version == Gen2:
+        if args.file:
+            cur_mom = open('mom2', 'wb')
+            cur_mom.write(args.file.read())
+            cur_mom.close()
+            
+        if args.currentMOM:
+            filename = os.popen(Gen2_MOM)
+            cur_mom = open('mom2', 'wb')
+            cur_mom.write(filename.read())
+            cur_mom.close()
+            
+        if args.diff:
+            cur_mom = open('mom2','rb')
+            commit = os.popen(Gen2_commit)
+            prev_commit = commit.readlines()[1]
+            prev_commit = prev_commit.split(' ')[0]
+            read_prev_mom = os.popen(Gen2_prevMOM % prev_commit)
+            
+            prev_mom = open('prevmom','wb')
+            prev_mom.write(read_prev_mom.read())
+            prev_mom.close()
+            prev_mom = open('prevmom','rb')
+            
+            if args.mom:
+                parser1 = ParsingMom(prev_mom)
+                parser2 = ParsingMom(cur_mom)        
+                prev_str = parser1.showMom(args.mo, args.attr)
+                cur_str = parser2.showMom(args.mo, args.attr)
+                diff_file =  diff(prev_str, cur_str)
+                print diff_file
+                
+            if args.description:
+                parser1 = ParsingMom(prev_mom)
+                parser2 = ParsingMom(cur_mom)        
+                prev_str = parser1.showDesc(args.mo, args.attr)
+                cur_str = parser2.showDesc(args.mo, args.attr)
+                diff_file =  diff(prev_str, cur_str)
+                print diff_file
+        else:
+            if args.mom:
+                try: 
+                    cur_mom = open('mom2','rb')
+                    parser = ParsingMom(cur_mom)
+                    print parser.showMom(args.mo, args.attr)
+                except Exception as ex: print ex 
+            
+            if args.description:
+                try: 
+                    cur_mom = open('mom2','rb')
+                    parser = ParsingMom(cur_mom)
+                    print parser.showDesc(args.mo, args.attr) 
+                except Exception as ex: print ex     
 
-        except Exception as ex: print ex
-        
-    else:
-        if args.mom:
-            try: 
-                if args.version == 1:
-                    cur_mom = open('mom','rb')
-                if args.version == 2:
-                    cur_mom = open('mom2','rb')
-                parser = ParsingMom(cur_mom)
-                print parser.showMom(args.mo, args.attr)
-            except Exception as ex: print ex 
-        
-        if args.description:
-            try: 
-                if args.version == 1:
-                    cur_mom = open('mom','rb')
-                if args.version == 2:
-                    cur_mom = open('mom2','rb')
-                parser = ParsingMom(cur_mom)
-                print parser.showDesc(args.mo, args.attr) 
-            except Exception as ex: print ex 
-        
-        if args.tree:
-            pass
-        
 # add argparse command line option
 parser = argparse.ArgumentParser(description = 'Test MOM handling')
 parser.add_argument('-i', dest ='file', action = 'store', type = argparse.FileType('r'), help = 'If you want to show specific MOM version, input filename by using -i option')
@@ -220,16 +247,17 @@ parser.add_argument('-diff', dest ='diff', action = 'store_true', help = 'Show d
 parser.add_argument('-a', dest ='mom', action = 'store_true', help = 'Show all information in MOM')
 parser.add_argument('-t', dest ='tree', action = 'store_true', help = 'Show relationship between MOs') 
 args = parser.parse_args()  
-argParse()
+# argParse()
 
-if __name__ == '__main__':
+def testcase():
     name = "LteRbsNodeComplete_Itr27_R10D03.xml"
     parser = ParsingMom(name)
-#     print parser.showMom(mo='nbiot')
+    print parser.showMom()
 #     print parser.showMom(mo='nbiot', attr='cell')
 #     print parser.showDesc(mo='nbiot')
-    print parser.showDesc(attr='id$')
+#     print parser.showDesc(attr='id$')
 #     print parser.showDesc(mo='nbiot', attr='cell')
 #     print parser.showMom(attr='id$')
-#     print parser.showMom()
+if __name__ == '__main__':
+    testcase()
 
