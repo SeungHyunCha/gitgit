@@ -1,6 +1,6 @@
 import xml.etree.ElementTree as ET
 from define import *
-from collections import defaultdict
+
 
 class IterParser:
     def __init__(self, name):
@@ -75,8 +75,6 @@ class IterParser:
                         self.count = 1
                     else: pass
                 elif elem.tag == 'relationship':
-#                         relationname = Tree(elem)
-#                         self.relations[] = relationname
                         temp = elem.attrib.values()[0]
                         temp= temp.split('_to_')
                         temp= (temp[0],temp[1])
@@ -353,61 +351,24 @@ class Enum(Mo): pass
 class Struct(Mo): pass
 class MyException(Mo): pass
 
-class Tree:
-    def __init__(self, elem):
-        self.obj = elem
-        self.temp_name = elem.attrib.values()[0]
-        self.cardi = None
-        self.relation = None
-        self.__getRelation()
-        self.__getCardi()
-    
-    def __getRelation(self):
-        temp = self.temp_name.split('_to_')
-        temp = (temp[0],temp[1])
-        self.relation = temp
-    
-    def __test(self):
-        pass
-    
-    def __getCardi(self):
-        for child in self.obj:
-            for gchild in child:
-                for ggchild in gchild:
-                    if ggchild.tag == 'cardinality':
-                        pass#print 'ggchild', ggchild
-
-def test(d):
-    del_list = []
-    for parent_mo, list_child in d.items():
-#         if parent_mo[-3:] is not 'ref':
-        for child_mo in list_child:
-            for check in d.keys():
-                if child_mo == check:
-#             if child_mo in d.keys():
-                    d[parent_mo].remove(child_mo)
-                    d[parent_mo].append((child_mo, d[child_mo]))
-                    del_list.append(child_mo)      
-    return del_list
-
 def combinedTree(relation):
     d = defaultdict(list)
     for key, value in relation:
         if key[-3:] is not 'ref':
             d[key].append(value)
     return d
+
+def getsubtree(d, node):
+    if d.has_key(node):
+        return ([node] + [getsubtree(d, child) for child in d[node]])
+    else: return ([node])
+
 def testcase():
     name = "LteRbsNodeComplete_Itr27_R10D03.xml"
 #     name = "Lrat_DWAXE_mp_Itr27_R10E02.xml"
     parser = IterParser(name)
     d = combinedTree(parser.relations)
-    del_list = test(d)
-    try:
-        for del1 in del_list:
-            del d[del1]
-    except:pass
-    print d
+    a = getsubtree(d, 'ManagedElement')
     
-
 if __name__ == '__main__':
     testcase()

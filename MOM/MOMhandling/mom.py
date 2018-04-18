@@ -1,13 +1,15 @@
 from MOMParser import IterParser
 import re, argparse, os, difflib 
+from collections import defaultdict
 from define import * 
 
 class ParsingMom(IterParser):
     def __init__(self, name):
         IterParser.__init__(self, name)
+        self.root = root
         self.line = "*" * 132
         self.sortMO = sorted(self.mos.keys())
-
+    
     def showMom(self, mo = None, attr = None):
         show_info = ''
         show_info += '%s\nname:%s version:%s release:%s author:%s revision:%s\n' %(self.line, self.mim['name'], self.mim['version'], self.mim['release'], self.mim['author'], self.mim['revision'])
@@ -108,6 +110,23 @@ class ParsingMom(IterParser):
                             show_info += '%s\n%s%s\t%s%s\n' %(self.line,"MO = ", getAttr.getMoName(),"ATTR = ", getAttr.getName())
                             show_info += '%s%s\n'%("description = ".ljust(10), getAttr.getDesc())
         return show_info
+    
+    def tree(self, mo = None):
+        dic = combinedTree(self.relations)
+        list_tree = getsubtree(dic, root)
+        return list_tree
+    
+def combinedTree(relation):
+    d = defaultdict(list)
+    for key, value in relation:
+        if key[-3:] is not 'ref':
+            d[key].append(value)
+    return d
+
+def getsubtree(d, node):
+    if d.has_key(node):
+        return ([node] + [getsubtree(d, child) for child in d[node]])
+    else: return ([node])
        
 def diff(prev, cur):
     diff = difflib.ndiff(prev.splitlines(), cur.splitlines())
@@ -252,7 +271,11 @@ args = parser.parse_args()
 def testcase():
     name = "LteRbsNodeComplete_Itr27_R10D03.xml"
     parser = ParsingMom(name)
-    print parser.showMom()
+    print parser.tree()
+#     d = combinedTree(parser.relations)
+#     a = getsubtree(d, root)
+#     print a
+#     print parser.showMom()
 #     print parser.showMom(mo='nbiot', attr='cell')
 #     print parser.showDesc(mo='nbiot')
 #     print parser.showDesc(attr='id$')
