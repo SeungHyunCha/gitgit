@@ -1,7 +1,6 @@
 import xml.etree.ElementTree as ET
 from define import *
 
-
 class IterParser:
     def __init__(self, name):
         self.name = name
@@ -15,7 +14,7 @@ class IterParser:
         self.expmembers = {}
         self.mim = {}
         self.count = 0
-        self.relations = []
+        self.relations = {}
         self.__run()
         
     def __run(self):
@@ -23,62 +22,63 @@ class IterParser:
             # Create obj for mo, enum, struct, exception
             if event == 'start': 
                 if elem.tag == 'class':
-                    moname = Mo(elem)
-                    self.mos[moname.getName()] = moname
+                    mo_name = Mo(elem)
+                    self.mos[mo_name.getName()] = mo_name
                 elif elem.tag == 'enum':
-                    enumname = Enum(elem)
-                    self.enums[enumname.getName()] = enumname
+                    enum_name = Mo(elem)
+                    self.enums[enum_name.getName()] = enum_name
                 elif elem.tag == 'struct':
-                    structname = Struct(elem)
-                    self.structs[structname.getName()] = structname
+                    struct_name = Mo(elem)
+                    self.structs[struct_name.getName()] = struct_name
                 elif elem.tag == 'exception': 
-                    excepname = MyException(elem)
-                    self.exceps[excepname.getName()] = excepname
+                    excep_name = Mo(elem)
+                    self.exceps[excep_name.getName()] = excep_name
+                elif elem.tag == 'relationship':
+                    relation_name = Relation(elem)
+                    self.relations[relation_name.getName()] = relation_name
                 else: pass
             # Add infomation in obj            
             elif event == 'end': 
                 if elem.tag == 'class':
-                    moname.handle()
+                    mo_name.handle()
                     for attr in elem:
                         if attr.tag == 'attribute': 
                             child = Attr(attr)
-                            child.mo = moname.getName()
+                            child.mo = mo_name.getName()
                             self.attrs[child.getName()] = child
-                            moname.addAttrs(child)            
+                            mo_name.addAttrs(child)            
                 elif elem.tag == 'enum': 
-                    enumname.handle()
+                    enum_name.handle()
                     for attr in elem:
                         if attr.tag == 'enumMember': 
                             child = Attr(attr)
-                            child.mo = enumname.getName()  
+                            child.mo = enum_name.getName()  
                             self.emembers[child.getName()] = child
-                            enumname.addAttrs(child)
+                            enum_name.addAttrs(child)
                 elif elem.tag == 'struct': 
-                    structname.handle()
+                    struct_name.handle()
                     for attr in elem:
                         if attr.tag == 'structMember': 
                             child = Attr(attr) 
-                            child.mo = structname.getName() 
+                            child.mo = struct_name.getName() 
                             self.smembers[child.getName()] = child
-                            structname.addAttrs(child)
+                            struct_name.addAttrs(child)
                 elif elem.tag == 'exception': 
-                    excepname.handle()
+                    excep_name.handle()
                     for attr in elem:
                         if attr.tag == 'exceptionParameter': 
                             child = Attr(attr)  
-                            child.mo = excepname.getName()
+                            child.mo = excep_name.getName()
                             self.expmembers[child.getName()] = child
-                            excepname.addAttrs(child)
+                            excep_name.addAttrs(child)
                 elif elem.tag == 'mim': # mim version
                     if self.count == 0:
                         self.mim = elem.attrib
                         self.count = 1
                     else: pass
                 elif elem.tag == 'relationship':
-                        temp = elem.attrib.values()[0]
-                        temp= temp.split('_to_')
-                        temp= (temp[0],temp[1])
-                        self.relations.append(temp)
+                    relation_name.handle()
+#                     print relation_name.__dict__
                 else: pass
             else: pass
 
@@ -88,8 +88,6 @@ class Mo:
         self.attrs_obj = {}
         self.flags = [] # systemcreated
         self.others = {} # description...
-        self.parent = None
-        self.child = None
         self.obj = elem
 #         self.handle()
     
@@ -151,8 +149,6 @@ class Attr:
     def __init__(self, elem):
         self.name = elem.attrib.values()[0]
         self.obj = elem
-        self.mo = None
-        self.types = None
         self.flags = [] # readonly, restricted, mandatory, nonPersistent...
         self.length = {} # length
         self.range = {} # range
@@ -346,29 +342,93 @@ class DataType:
             else:
                 for child in self.attr:
                     self.values = {child.tag:child.text}
-                                              
-class Enum(Mo): pass
-class Struct(Mo): pass
-class MyException(Mo): pass
 
-def combinedTree(relation):
-    d = defaultdict(list)
-    for key, value in relation:
-        if key[-3:] is not 'ref':
-            d[key].append(value)
-    return d
-
-def getsubtree(d, node):
-    if d.has_key(node):
-        return ([node] + [getsubtree(d, child) for child in d[node]])
-    else: return ([node])
-
+class Relation:
+    def __init__(self, elem):
+        self.obj = elem
+        self.name = elem.attrib.values()[0]
+        self.type = None
+        self.parent = None
+        self.child = None
+        self.to_cardi = None
+        self.from_cardi = None
+        self.from_class = None
+        self.to_class = None
+        self.from_attr = None
+        self.to_attr = None
+    def getName(self):
+        return self.name    
+        
+    def getParentName(self):
+        return self.parent
+    
+    def getChildName(self):
+        return self.child
+    
+    def getCaldi(self):
+        return self.cardi
+    
+    def combinedTree(relation):
+        d = defaultdict(list)
+        for key, value in relation:
+            if key[-3:] is not 'ref':
+                d[key].append(value)
+        return d
+    
+    def getsubtree(d, node):
+        if d.has_key(node):
+            return ([node] + [getsubtree(d, child) for child in d[node]])
+        else: return ([node])
+        
+    def handle(self):
+        for attr in self.obj:
+            if attr.tag == 'containment':
+                self.type = attr.tag
+                for child in attr:
+                    if child.tag == 'parent':
+                        for gchild in child:
+                            self.parent = gchild.attrib.values()[0]
+                    elif child.tag == 'child':
+                        for gchild in child:
+                            if gchild.tag == 'cardinality':
+                                cardi = []
+                                for ggchild in gchild:
+                                    cardi.append(ggchild.text) 
+                                self.to_cardi = '%s' % cardi
+                            else:
+                                self.child = gchild.attrib.values()[0]
+                    else: pass
+            elif attr.tag == 'biDirectionalAssociation':
+                self.type = attr.tag
+                for child in attr:
+                    str = child.attrib.values()[0]
+                    if str[-3:] is not 'Ref':
+                        self.to_attr = str # reservedBy
+                        for gchild in child:
+                            if gchild.tag == 'hasClass':
+                                self.to_class = gchild.attrib.values()[0]
+                            else:
+                                cardi = []
+                                for ggchild in child:
+                                    cardi.append(ggchild.text)
+                                self.to_cardi = '%s' % cardi
+                    else:
+                        self.from_attr = str # ref
+                        for gchild in child:
+                            if gchild.tag == 'hasClass':
+                                self.to_class = gchild.attrib.values()[0]
+                            else:
+                                cardi = []
+                                for ggchild in child:
+                                    cardi.append(ggchild.text)
+                                self.to_cardi = '%s' % cardi
+        
 def testcase():
     name = "LteRbsNodeComplete_Itr27_R10D03.xml"
 #     name = "Lrat_DWAXE_mp_Itr27_R10E02.xml"
     parser = IterParser(name)
-    d = combinedTree(parser.relations)
-    a = getsubtree(d, 'ManagedElement')
+#     d = combinedTree(parser.relations)
+#     a = getsubtree(d, 'ManagedElement')
     
 if __name__ == '__main__':
     testcase()

@@ -21,15 +21,14 @@ class ParsingMom(IterParser):
 #             for enum in sorted(self.enums):
 #                 show_info += '%s\n' % enum
             for moc in self.sortMO:
-                if moc is not None:
-                    getMo = self.mos[moc]
-                    show_info += '%s\n' % getMo.showMoInfo()
-                    show_info += '%s\n%s%s%s%s%s%s\n%s\n' % (self.line, "MOC".ljust(30), 'Attribute'.ljust(30), 'defaultValue'.ljust(20), 'Flags'.ljust(40), 'Length'.ljust(20), 'Range'.ljust(20), self.line)
-                    attr_list = getMo.getAttrs()
-                    for attr_name in sorted(attr_list):
-                        getAttr = attr_list[attr_name]
-                        show_info += '%s%s%s%s%s%s\n' % (getAttr.getMoName().ljust(30), getAttr.getName().ljust(30), getAttr.getDefault().ljust(20), getAttr.getFlags().ljust(40), getAttr.getLength().ljust(20), getAttr.getRange())
-        
+                getMo = self.mos[moc]
+                show_info += '%s\n' % getMo.showMoInfo()
+                show_info += '%s\n%s%s%s%s%s%s\n%s\n' % (self.line, "MOC".ljust(30), 'Attribute'.ljust(30), 'defaultValue'.ljust(20), 'Flags'.ljust(40), 'Length'.ljust(20), 'Range'.ljust(20), self.line)
+                attr_list = getMo.getAttrs()
+                for attr_name in sorted(attr_list):
+                    getAttr = attr_list[attr_name]
+                    show_info += '%s%s%s%s%s%s\n' % (getAttr.getMoName().ljust(30), getAttr.getName().ljust(30), getAttr.getDefault().ljust(20), getAttr.getFlags().ljust(40), getAttr.getLength().ljust(20), getAttr.getRange())
+                    
         if mo is not None and attr is None:
             p = re.compile(mo, re.IGNORECASE)
             for moc in self.sortMO:
@@ -37,7 +36,7 @@ class ParsingMom(IterParser):
                 if check:   
                     getMo = self.mos[moc]
                     show_info += '%s\n' % getMo.showMoInfo()
-        
+                
         if mo is None and attr is not None:
             show_info += '%s\n%s%s%s%s%s%s\n%s\n' % (self.line, "MOC".ljust(30), 'Attribute'.ljust(30), 'defaultValue'.ljust(20), 'Flags'.ljust(40), 'Length'.ljust(20), 'Range'.ljust(20), self.line)
             p = re.compile(attr, re.IGNORECASE)
@@ -46,7 +45,7 @@ class ParsingMom(IterParser):
                 if check:
                     getAttr = self.attrs[attr_name]
                     show_info += '%s%s%s%s%s%s\n' % (getAttr.getMoName().ljust(30), getAttr.getName().ljust(30), getAttr.getDefault().ljust(20), getAttr.getFlags().ljust(40), getAttr.getLength().ljust(20), getAttr.getRange())
-        
+                
         if mo is not None and attr is not None:
             p = re.compile(mo, re.IGNORECASE)
             for moc in self.sortMO:
@@ -68,10 +67,9 @@ class ParsingMom(IterParser):
         show_info += '%s\nname:%s version:%s release:%s author:%s revision:%s\n' %(self.line, self.mim['name'], self.mim['version'], self.mim['release'], self.mim['author'], self.mim['revision'])
         if mo is None and attr is None:
             for moc in self.sortMO:
-                if moc is not None:
-                    getMo = self.mos[moc]
-                    show_info += '%s\n%s%s\n' %(self.line,"MO = ", getMo.getName())
-                    show_info += '%s%s\n'%("description = ".ljust(10), getMo.getDesc())
+                getMo = self.mos[moc]
+                show_info += '%s\n%s%s\n' %(self.line,"MO = ", getMo.getName())
+                show_info += '%s%s\n'%("description = ".ljust(10), getMo.getDesc())
             
         if mo is not None and attr is None:
             p = re.compile(mo, re.IGNORECASE)
@@ -85,7 +83,7 @@ class ParsingMom(IterParser):
                     for attr_name in sorted(attr_list):
                         getAttr = attr_list[attr_name]
                         show_info += '%s\n%s\t%s\n' %(self.line, getAttr.getName(), getAttr.getDesc())
-                    
+                        
         if mo is None and attr is not None:
             p = re.compile(attr, re.IGNORECASE)
             for attr_name in sorted(self.attrs):
@@ -111,10 +109,18 @@ class ParsingMom(IterParser):
                             show_info += '%s%s\n'%("description = ".ljust(10), getAttr.getDesc())
         return show_info
     
-    def tree(self, mo = None):
-        dic = combinedTree(self.relations)
-        list_tree = getsubtree(dic, root)
-        return list_tree
+    def relation(self, mo = None):
+        p = re.compile(mo, re.IGNORECASE)
+        for moc in self.relations:
+            check = p.search(moc)
+            if check:   
+                print mo
+                relation = self.relations[moc]
+                print relation.getName()
+#         dic = combinedTree(self.relations)
+#         list_tree = getsubtree(dic, root)
+#         list_tree = getsubtree(dic, 'ENodeBFunction')
+#         return list_tree
     
 def combinedTree(relation):
     d = defaultdict(list)
@@ -122,6 +128,9 @@ def combinedTree(relation):
         if key[-3:] is not 'ref':
             d[key].append(value)
     return d
+
+def test():
+    pass
 
 def getsubtree(d, node):
     if d.has_key(node):
@@ -271,16 +280,15 @@ args = parser.parse_args()
 def testcase():
     name = "LteRbsNodeComplete_Itr27_R10D03.xml"
     parser = ParsingMom(name)
-    print parser.tree()
-#     d = combinedTree(parser.relations)
-#     a = getsubtree(d, root)
-#     print a
+    print parser.relation(mo='nbiot')
 #     print parser.showMom()
 #     print parser.showMom(mo='nbiot', attr='cell')
+#     print parser.showMom(mo='vzsdfwe')
+#     print parser.showMom(mo='nbiot')
+#     print parser.showMom(attr='id$')
 #     print parser.showDesc(mo='nbiot')
 #     print parser.showDesc(attr='id$')
 #     print parser.showDesc(mo='nbiot', attr='cell')
-#     print parser.showMom(attr='id$')
 if __name__ == '__main__':
     testcase()
 
