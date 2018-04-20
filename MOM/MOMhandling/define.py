@@ -18,3 +18,5 @@ red = u"\u001b[31m %s \u001b[0m\n"
 yellow = u"\u001b[32m %s \u001b[0m\n"
 green = u"\u001b[33m %s \u001b[0m\n"
 root = 'ManagedElement'
+ref_to_By = 'reservedBy'
+hidden = 'EricssonOnly'

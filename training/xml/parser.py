@@ -1,11 +1,13 @@
 import xml.etree.ElementTree as ET
-#nsmap = {}
 class MomParser():
 	def __init__(self, name):
 		self.name = name
-		for event, elem in ET.iterparse('sample.xml',events=('start','end','start-ns')):
-			print event, elem
+	
+	def parse(self):	
+		for event, elem in ET.iterparse(self.name,events=('start','end')):
+			print event, elem, elem.tag, elem.attrib, elem.text 
 
-			print elem.__dict__
-
-
+if __name__ == '__main__':
+	file = 'sample.xml'
+	a = MomParser(file)
+	a.parse()

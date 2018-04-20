@@ -3,93 +3,96 @@ from define import *
 
 class IterParser:
     def __init__(self, name):
+        # all of information in dictionary {name:object}
         self.name = name
-        self.mos = {}
-        self.attrs = {}
-        self.enums = {}
-        self.emembers = {}
-        self.structs = {}
-        self.smembers = {}
-        self.exceps = {}
-        self.expmembers = {}
-        self.mim = {}
+        self.mos = {}       # all of MO classes
+        self.attrs = {}     # all of attributes
+        self.enums = {}     # all of enums
+        self.emembers = {}  # all of enum members
+        self.structs = {}   # all of structs
+        self.smembers = {}  # all of struct members
+        self.exceps = {}    # all of exceptions
+        self.expmembers = {}# all of exception parameters
+        self.mim = {}       # information of MIM
         self.count = 0
-        self.relations = {}
+        self.relations = {} # all of relationships
         self.__run()
         
     def __run(self):
         for event, elem in ET.iterparse(self.name, events=('start', 'end')):
-            # Create obj for mo, enum, struct, exception
+            # Create object
             if event == 'start': 
                 if elem.tag == 'class':
-                    mo_name = Mo(elem)
-                    self.mos[mo_name.getName()] = mo_name
+                    mo_class = Mo(elem)
+                    self.mos[mo_class.getName()] = mo_class
                 elif elem.tag == 'enum':
-                    enum_name = Mo(elem)
-                    self.enums[enum_name.getName()] = enum_name
+                    mo_class = Mo(elem)
+                    self.enums[mo_class.getName()] = mo_class
                 elif elem.tag == 'struct':
-                    struct_name = Mo(elem)
-                    self.structs[struct_name.getName()] = struct_name
+                    mo_class = Mo(elem)
+                    self.structs[mo_class.getName()] = mo_class
                 elif elem.tag == 'exception': 
-                    excep_name = Mo(elem)
-                    self.exceps[excep_name.getName()] = excep_name
+                    mo_class = Mo(elem)
+                    self.exceps[mo_class.getName()] = mo_class
                 elif elem.tag == 'relationship':
                     relation_name = Relation(elem)
                     self.relations[relation_name.getName()] = relation_name
                 else: pass
-            # Add infomation in obj            
+                
+            # Parse and add an information in created object            
             elif event == 'end': 
                 if elem.tag == 'class':
-                    mo_name.handle()
+                    mo_class.handle()                            
                     for attr in elem:
                         if attr.tag == 'attribute': 
                             child = Attr(attr)
-                            child.mo = mo_name.getName()
+                            child.mo = mo_class.getName()
                             self.attrs[child.getName()] = child
-                            mo_name.addAttrs(child)            
+                            mo_class.addAttrs(child)       
+                        else: pass     
                 elif elem.tag == 'enum': 
-                    enum_name.handle()
+                    mo_class.handle()
                     for attr in elem:
                         if attr.tag == 'enumMember': 
                             child = Attr(attr)
-                            child.mo = enum_name.getName()  
+                            child.mo = mo_class.getName()  
                             self.emembers[child.getName()] = child
-                            enum_name.addAttrs(child)
+                            mo_class.addAttrs(child)
+                        else: pass
                 elif elem.tag == 'struct': 
-                    struct_name.handle()
+                    mo_class.handle()
                     for attr in elem:
                         if attr.tag == 'structMember': 
                             child = Attr(attr) 
-                            child.mo = struct_name.getName() 
+                            child.mo = mo_class.getName() 
                             self.smembers[child.getName()] = child
-                            struct_name.addAttrs(child)
+                            mo_class.addAttrs(child)
+                        else: pass
                 elif elem.tag == 'exception': 
-                    excep_name.handle()
+                    mo_class.handle()
                     for attr in elem:
                         if attr.tag == 'exceptionParameter': 
                             child = Attr(attr)  
-                            child.mo = excep_name.getName()
+                            child.mo = mo_class.getName()
                             self.expmembers[child.getName()] = child
-                            excep_name.addAttrs(child)
-                elif elem.tag == 'mim': # mim version
+                            mo_class.addAttrs(child)
+                        else: pass
+                elif elem.tag == 'mim': # Add MIM version
                     if self.count == 0:
                         self.mim = elem.attrib
                         self.count = 1
                     else: pass
                 elif elem.tag == 'relationship':
                     relation_name.handle()
-#                     print relation_name.__dict__
                 else: pass
-            else: pass
 
 class Mo:
     def __init__(self, elem):
         self.name = elem.attrib.values()[0]
-        self.attrs_obj = {}
-        self.flags = [] # systemcreated
-        self.others = {} # description...
+        self.attrs_obj = {} # attribute in MOC
+        self.flags = [] # systemcreated, and so on
+        self.others = {} # description, and so on
         self.obj = elem
-#         self.handle()
     
     def getName(self):
         return self.name
@@ -103,8 +106,7 @@ class Mo:
     def getFlags(self):
         temp = sorted(self.flags)
         try: 
-            if temp[0] == []:
-                del temp[0]
+            if temp[0] == []: del temp[0]
         except: pass
         temp = ','.join(temp)
         return str(temp)
@@ -116,7 +118,7 @@ class Mo:
         return self.attrs_obj
     
     def handle(self):
-        # To add properties of MOC except info of attribute, enumMember, structMember and exceptionParameter
+        # To add flags and others
         for mo_child in self.obj:
             if len(mo_child._children) == 0 and mo_child.tag != 'attribute' and 'enumMember' and 'structMember' and 'exceptionParameter':
                 if mo_child.text == None: 
@@ -127,10 +129,9 @@ class Mo:
                         self.others.update({mo_child.tag:mo_child.text})
             else: 
                 if mo_child.tag == 'action':
-                    pass
-#                     print 'action', mo_child.text, mo_child.attrib
+                    pass#print 'action', mo_child.text, mo_child.attrib
 
-    # Show info using only -mo option
+    # Show information using only -mo option
     def showMoInfo(self):
         show_info = ''
         line = "*" * 132
@@ -149,11 +150,11 @@ class Attr:
     def __init__(self, elem):
         self.name = elem.attrib.values()[0]
         self.obj = elem
-        self.flags = [] # readonly, restricted, mandatory, nonPersistent...
-        self.length = {} # length
+        self.flags = [] # readonly, restricted, mandatory, nonPersistent, and so on
+        self.length = {} # length 
         self.range = {} # range
-        self.values = {} # default, multi, unit...
-        self.others = {} # description, dependancies...
+        self.values = {} # default, multi, unit, and so on
+        self.others = {} # description, dependancies, and so on
         self.__handle()
     
     def getName(self):
@@ -222,7 +223,7 @@ class Attr:
                 return str(self.values['multiplicationFactor'])
             else: pass
         return ''
-    
+    # handle flags, others, and dataType
     def __handle(self):
         for attr in self.obj:
             if len(attr._children) == 0:
@@ -249,7 +250,7 @@ class Attr:
                     self.types = data.getType()
                     
         if 'visibility' in self.others:
-            self.flags.append('EricssonOnly')
+            self.flags.append(hidden)
                     
 class DataType:
     def __init__(self, attr):
@@ -258,7 +259,6 @@ class DataType:
         self.types = None
         self.length = {}
         self.stringlength = {}
-        self.range = {}
         self.ranges = []
         self.values = {}
         self.__handle()
@@ -356,6 +356,8 @@ class Relation:
         self.to_class = None
         self.from_attr = None
         self.to_attr = None
+        self.to_flags = None
+        
     def getName(self):
         return self.name    
         
@@ -366,20 +368,8 @@ class Relation:
         return self.child
     
     def getCaldi(self):
-        return self.cardi
+        return self.to_cardi
     
-    def combinedTree(relation):
-        d = defaultdict(list)
-        for key, value in relation:
-            if key[-3:] is not 'ref':
-                d[key].append(value)
-        return d
-    
-    def getsubtree(d, node):
-        if d.has_key(node):
-            return ([node] + [getsubtree(d, child) for child in d[node]])
-        else: return ([node])
-        
     def handle(self):
         for attr in self.obj:
             if attr.tag == 'containment':
@@ -393,8 +383,8 @@ class Relation:
                             if gchild.tag == 'cardinality':
                                 cardi = []
                                 for ggchild in gchild:
-                                    cardi.append(ggchild.text) 
-                                self.to_cardi = '%s' % cardi
+                                    cardi.append(int(ggchild.text)) 
+                                self.to_cardi = '%s' % list(set(cardi))
                             else:
                                 self.child = gchild.attrib.values()[0]
                     else: pass
@@ -402,7 +392,7 @@ class Relation:
                 self.type = attr.tag
                 for child in attr:
                     str = child.attrib.values()[0]
-                    if str[-3:] is not 'Ref':
+                    if str[-3:] != 'Ref':
                         self.to_attr = str # reservedBy
                         for gchild in child:
                             if gchild.tag == 'hasClass':
@@ -416,12 +406,12 @@ class Relation:
                         self.from_attr = str # ref
                         for gchild in child:
                             if gchild.tag == 'hasClass':
-                                self.to_class = gchild.attrib.values()[0]
+                                self.from_class = gchild.attrib.values()[0]
                             else:
                                 cardi = []
                                 for ggchild in child:
                                     cardi.append(ggchild.text)
-                                self.to_cardi = '%s' % cardi
+                                self.from_cardi = '%s' % cardi
         
 def testcase():
     name = "LteRbsNodeComplete_Itr27_R10D03.xml"

@@ -1,12 +1,18 @@
 import re
 
 string = 'python'
-p = re.compile('pyt')
-result = p.match(string)
-result1 = p.search(string)
-
+p = re.compile('yt')
+result = p.search(string)
 if result:
-    print 'match'
+    print 'search!!'
+    
+p = re.compile('on$')
+result = p.search(string)
+if result:
+    print 'search!!'
 
-if result1:
-    print 'search'
+p = re.compile('ona$')
+result = p.search(string)
+if result:
+    print 'search!!'
+else: print 'fail!!'
