@@ -117,9 +117,11 @@ class ParsingMom(IterParser):
                 cardi = value.getCaldi()
                 child_cardi = child + cardi
                 tree_list.insert(0, child_cardi)
-                return parent
+                if parent == root: 
+                    tree_list.insert(0, root + '[1]')
+                else: self.findParent(parent, tree_list)
             else: pass
-            
+        
     def findChild(self, parent, tree_list, show_info):
         for key, value in self.relations.items():
             if key[-10:] == ref_to_By: pass
@@ -128,8 +130,6 @@ class ParsingMom(IterParser):
                 cardi = value.getCaldi()
                 child_cardi = child + cardi
                 tree_list.append(child_cardi)
-                show_info += '%s\n' % tree_list
-                return child
     
     def relation(self, mo = None):
         show_info = ''
@@ -142,23 +142,27 @@ class ParsingMom(IterParser):
             for key, value in self.relations.items():
                 if key[-10:] == ref_to_By: pass
                 else:
-                    parent = value.getParentName() 
-                    child = value.getChildName()
+                    parent_mo = value.getParentName() 
+                    child_mo = value.getChildName()
                     cardi = value.getCaldi()
-                    child_cardi = child + cardi
-                    check = p.search(child)
+                    child_cardi = child_mo + cardi
+                    check = p.search(child_mo)
                     if check:
                         tree_list = []
-                        tree_list.append(child_cardi)   
-                        while self.findParent(parent, tree_list) != root:
-                            parent = self.findParent(parent, tree_list)
-                        parent = tree_list.insert(0, root+'[1]')
-                        get_orderd_tree = list(OrderedDict.fromkeys(tree_list))
-                        show_info += '%s\n' % (get_orderd_tree)
-                        while self.findChild(child, get_orderd_tree, show_info) != None:
-                            child = self.findChild(child, get_orderd_tree, show_info)
-                        get_orderd_tree = list(OrderedDict.fromkeys(get_orderd_tree))
-                        show_info += '%s\n' % (get_orderd_tree)
+                        tree_list.append(child_cardi)
+                        self.findParent(parent_mo, tree_list)
+                        show_info += '%s\n' % tree_list
+                        
+                        for key, value in self.relations.items():
+                            if key[-10:] == ref_to_By: pass
+                            elif child_mo == value.getParentName():
+                                child = value.getChildName()
+                                cardi = value.getCaldi()
+                                child_cardi = child + cardi
+                                tree_list.append(child_cardi)
+                                show_info += '%s\n' % tree_list
+                                tree_list.pop()
+                                
         return show_info
     
 def diff(prev, cur):
@@ -304,8 +308,8 @@ args = parser.parse_args()
 def testcase():
     name = "LteRbsNodeComplete_Itr27_R10D03.xml"
     parser = ParsingMom(name)
-#     a = parser.relation(mo='nbiot')
-    a = parser.relation(mo='uemeascontrol')
+    a = parser.relation(mo='celltdd')
+#     a = parser.relation(mo='uemeascontrol')
     print a
 #     print parser.showMom()
 #     print parser.showMom(mo='nbiot', attr='cell')
