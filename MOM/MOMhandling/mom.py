@@ -119,24 +119,61 @@ class ParsingMom(IterParser):
                 tree_list.insert(0, child_cardi)
                 if parent == root: 
                     tree_list.insert(0, root + '[1]')
-                else: self.findParent(parent, tree_list)
+                    return tree_list
+                else: return self.findParent(parent, tree_list)
             else: pass
         
-    def findChild(self, parent, tree_list, show_info):
+    def findChild(self, parent):
+        child_dic = {}
         for key, value in self.relations.items():
             if key[-10:] == ref_to_By: pass
             elif parent == value.getParentName():
                 child = value.getChildName()
                 cardi = value.getCaldi()
                 child_cardi = child + cardi
-                tree_list.append(child_cardi)
+                child_dic.update({child:child_cardi})
+            else: pass
+        return child_dic
+    
+    def checkSys(self, tree_list):
+        if tree_list[-1][-3:] == '[1]':
+            return '(systemCreated)'
+        else: return ''
+    
+    def treeStruct(self, tree_list, show_info, mo):
+        child_list = self.findChild(mo)
+        if child_list != {}:
+            for child in child_list:
+                tree_list.append(child_list[child])
+                show_info += '%s%s\n' % (tree_list, self.checkSys(tree_list))
+                check_child = self.findChild(child)
+                if check_child != {}:
+                    for gchild in check_child:
+                        tree_list.append(check_child[gchild])
+                        show_info += '%s%s\n' % (tree_list, self.checkSys(tree_list))
+                        check2_child = self.findChild(gchild)
+                        if check2_child != {}:
+                            for ggchild in check2_child:
+                                tree_list.append(check2_child[ggchild])
+                                show_info += '%s%s\n' % (tree_list, self.checkSys(tree_list))
+                                check3_child = self.findChild(ggchild)
+                                if check3_child != {}:
+                                    for gggchild in check3_child:
+                                        tree_list.append(check3_child[gggchild])
+                                        show_info += '%s%s\n' % (tree_list, self.checkSys(tree_list))
+                                        tree_list.pop()
+                                tree_list.pop()
+                        tree_list.pop()
+                tree_list.pop()
+        tree_list.pop()
+        return show_info
     
     def relation(self, mo = None):
         show_info = ''
         if mo == None:
-            for key, value in self.relations.items():
-                if key[-10:] == ref_to_By: pass
-                else: pass 
+            tree_list = []
+            tree_list.append(root + '[1]')
+            show_info += '%s\n' % self.treeStruct(tree_list, show_info, root)
         else:
             p = re.compile(mo, re.IGNORECASE)
             for key, value in self.relations.items():
@@ -150,19 +187,9 @@ class ParsingMom(IterParser):
                     if check:
                         tree_list = []
                         tree_list.append(child_cardi)
-                        self.findParent(parent_mo, tree_list)
-                        show_info += '%s\n' % tree_list
-                        
-                        for key, value in self.relations.items():
-                            if key[-10:] == ref_to_By: pass
-                            elif child_mo == value.getParentName():
-                                child = value.getChildName()
-                                cardi = value.getCaldi()
-                                child_cardi = child + cardi
-                                tree_list.append(child_cardi)
-                                show_info += '%s\n' % tree_list
-                                tree_list.pop()
-                                
+                        tree_list = self.findParent(parent_mo, tree_list)
+                        show_info += '%s%s\n' % (tree_list, self.checkSys(tree_list))
+                        show_info += '%s\n' % self.treeStruct(tree_list, show_info, child_mo)
         return show_info
     
 def diff(prev, cur):
@@ -236,6 +263,12 @@ def argParse():
                     parser = ParsingMom(cur_mom)
                     print parser.showDesc(args.mo, args.attr) 
                 except Exception as ex: print ex     
+            elif args.tree:
+                try:
+                    cur_mom = open('mom', 'rb')
+                    parser = ParsingMom(cur_mom)
+                    print parser.relation(args.mo)
+                except Exception as ex: print ex     
                 
     elif args.version == Gen2:
         if args.file:
@@ -308,7 +341,8 @@ args = parser.parse_args()
 def testcase():
     name = "LteRbsNodeComplete_Itr27_R10D03.xml"
     parser = ParsingMom(name)
-    a = parser.relation(mo='celltdd')
+    a = parser.relation()
+#     a = parser.relation(mo='celltdd')
 #     a = parser.relation(mo='uemeascontrol')
     print a
 #     print parser.showMom()
