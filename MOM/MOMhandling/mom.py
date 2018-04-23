@@ -1,7 +1,6 @@
 from MOMParser import IterParser
 import re, argparse, os, difflib 
 from define import * 
-from collections import OrderedDict
 
 class ParsingMom(IterParser):
     def __init__(self, name):
