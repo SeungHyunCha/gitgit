@@ -108,7 +108,8 @@ class ParsingMom(IterParser):
                             show_info += '%s%s\n'%("description = ".ljust(10), getAttr.getDesc())
         return show_info
     
-    def findParent(self, child, tree_list):
+    
+    def findParentTree(self, child, tree_list):
         for key, value in self.relations.items():
             if key[-10:] == ref_to_By: pass
             elif child == value.getChildName():
@@ -119,14 +120,13 @@ class ParsingMom(IterParser):
                 if parent == root: 
                     tree_list.insert(0, root + '[1]')
                     return tree_list
-                else: return self.findParent(parent, tree_list)
+                else: return self.findParentTree(parent, tree_list)
             else: pass
-        
+    
     def findChild(self, parent):
         child_dic = {}
         for key, value in self.relations.items():
-            if key[-10:] == ref_to_By: pass
-            elif parent == value.getParentName():
+            if parent == value.getParentName():
                 child = value.getChildName()
                 cardi = value.getCaldi()
                 child_cardi = child + cardi
@@ -164,8 +164,8 @@ class ParsingMom(IterParser):
                                 tree_list.pop()
                         tree_list.pop()
                 tree_list.pop()
-        tree_list.pop()
-        return show_info
+            return show_info
+        else: return '' 
     
     def relation(self, mo = None):
         show_info = ''
@@ -186,7 +186,7 @@ class ParsingMom(IterParser):
                     if check:
                         tree_list = []
                         tree_list.append(child_cardi)
-                        tree_list = self.findParent(parent_mo, tree_list)
+                        tree_list = self.findParentTree(parent_mo, tree_list)
                         show_info += '%s%s\n' % (tree_list, self.checkSys(tree_list))
                         show_info += '%s\n' % self.treeStruct(tree_list, show_info, child_mo)
         return show_info
@@ -209,124 +209,69 @@ def diff(prev, cur):
 
 #add argparse operation
 def argParse():
-    if args.version == Gen1:
-        if args.file:
-            cur_mom = open('mom', 'wb')
-            cur_mom.write(args.file.read())
-            cur_mom.close()
+    if args.file:
+        cur_mom = open('mom', 'wb')
+        cur_mom.write(args.file.read())
+        cur_mom.close()
+        
+    if args.currentMOM:
+        filename = os.popen(Gen1_MOM)
+        cur_mom = open('mom', 'wb')
+        cur_mom.write(filename.read())
+        cur_mom.close()
+        
+    if args.diff:
+        cur_mom = open('mom','rb')
+        commit = os.popen(Gen1_commit)
+        prev_commit = commit.readlines()[1]
+        prev_commit = prev_commit.split(' ')[0]
+        read_prev_mom = os.popen(Gen1_prevMOM % prev_commit)
+        
+        prev_mom = open('prevmom','wb')
+        prev_mom.write(read_prev_mom.read())
+        prev_mom.close()
+        prev_mom = open('prevmom','rb')
+        
+        if args.mom:
+            parser1 = ParsingMom(prev_mom)
+            parser2 = ParsingMom(cur_mom)        
+            prev_str = parser1.showMom(args.mo, args.attr)
+            cur_str = parser2.showMom(args.mo, args.attr)
+            diff_file =  diff(prev_str, cur_str)
+            print diff_file
             
-        elif args.currentMOM:
-            filename = os.popen(Gen1_MOM)
-            cur_mom = open('mom', 'wb')
-            cur_mom.write(filename.read())
-            cur_mom.close()
-            
-        elif args.diff:
-            cur_mom = open('mom','rb')
-            commit = os.popen(Gen1_commit)
-            prev_commit = commit.readlines()[1]
-            prev_commit = prev_commit.split(' ')[0]
-            read_prev_mom = os.popen(Gen1_prevMOM % prev_commit)
-            
-            prev_mom = open('prevmom','wb')
-            prev_mom.write(read_prev_mom.read())
-            prev_mom.close()
-            prev_mom = open('prevmom','rb')
-            
-            if args.mom:
-                parser1 = ParsingMom(prev_mom)
-                parser2 = ParsingMom(cur_mom)        
-                prev_str = parser1.showMom(args.mo, args.attr)
-                cur_str = parser2.showMom(args.mo, args.attr)
-                diff_file =  diff(prev_str, cur_str)
-                print diff_file
+        elif args.description:
+            parser1 = ParsingMom(prev_mom)
+            parser2 = ParsingMom(cur_mom)        
+            prev_str = parser1.showDesc(args.mo, args.attr)
+            cur_str = parser2.showDesc(args.mo, args.attr)
+            diff_file =  diff(prev_str, cur_str)
+            print diff_file
+    else:
+        if args.mom:
+            try: 
+                cur_mom = open('mom','rb')
+                parser = ParsingMom(cur_mom)
+                print parser.showMom(args.mo, args.attr)
+            except Exception as ex: print ex 
+        
+        if args.description:
+            try: 
+                cur_mom = open('mom','rb')
+                parser = ParsingMom(cur_mom)
+                print parser.showDesc(args.mo, args.attr) 
+            except Exception as ex: print ex     
+        
+        if args.tree:
+            try:
+                cur_mom = open('mom', 'rb')
+                parser = ParsingMom(cur_mom)
+                print parser.relation(args.mo)
+            except Exception as ex: print ex     
                 
-            elif args.description:
-                parser1 = ParsingMom(prev_mom)
-                parser2 = ParsingMom(cur_mom)        
-                prev_str = parser1.showDesc(args.mo, args.attr)
-                cur_str = parser2.showDesc(args.mo, args.attr)
-                diff_file =  diff(prev_str, cur_str)
-                print diff_file
-        else:
-            if args.mom:
-                try: 
-                    cur_mom = open('mom','rb')
-                    parser = ParsingMom(cur_mom)
-                    print parser.showMom(args.mo, args.attr)
-                except Exception as ex: print ex 
-            
-            elif args.description:
-                try: 
-                    cur_mom = open('mom','rb')
-                    parser = ParsingMom(cur_mom)
-                    print parser.showDesc(args.mo, args.attr) 
-                except Exception as ex: print ex     
-            elif args.tree:
-                try:
-                    cur_mom = open('mom', 'rb')
-                    parser = ParsingMom(cur_mom)
-                    print parser.relation(args.mo)
-                except Exception as ex: print ex     
-                
-    elif args.version == Gen2:
-        if args.file:
-            cur_mom = open('mom2', 'wb')
-            cur_mom.write(args.file.read())
-            cur_mom.close()
-            
-        elif args.currentMOM:
-            filename = os.popen(Gen2_MOM)
-            cur_mom = open('mom2', 'wb')
-            cur_mom.write(filename.read())
-            cur_mom.close()
-            
-        elif args.diff:
-            cur_mom = open('mom2','rb')
-            commit = os.popen(Gen2_commit)
-            prev_commit = commit.readlines()[1]
-            prev_commit = prev_commit.split(' ')[0]
-            read_prev_mom = os.popen(Gen2_prevMOM % prev_commit)
-            
-            prev_mom = open('prevmom','wb')
-            prev_mom.write(read_prev_mom.read())
-            prev_mom.close()
-            prev_mom = open('prevmom','rb')
-            
-            if args.mom:
-                parser1 = ParsingMom(prev_mom)
-                parser2 = ParsingMom(cur_mom)        
-                prev_str = parser1.showMom(args.mo, args.attr)
-                cur_str = parser2.showMom(args.mo, args.attr)
-                diff_file =  diff(prev_str, cur_str)
-                print diff_file
-                
-            elif args.description:
-                parser1 = ParsingMom(prev_mom)
-                parser2 = ParsingMom(cur_mom)        
-                prev_str = parser1.showDesc(args.mo, args.attr)
-                cur_str = parser2.showDesc(args.mo, args.attr)
-                diff_file =  diff(prev_str, cur_str)
-                print diff_file
-        else:
-            if args.mom:
-                try: 
-                    cur_mom = open('mom2','rb')
-                    parser = ParsingMom(cur_mom)
-                    print parser.showMom(args.mo, args.attr)
-                except Exception as ex: print ex 
-            
-            elif args.description:
-                try: 
-                    cur_mom = open('mom2','rb')
-                    parser = ParsingMom(cur_mom)
-                    print parser.showDesc(args.mo, args.attr) 
-                except Exception as ex: print ex     
-
 # add argparse command line option
 parser = argparse.ArgumentParser(description = 'Test MOM handling')
 parser.add_argument('-i', dest ='file', action = 'store', type = argparse.FileType('r'), help = 'If you want to show specific MOM version, input filename by using -i option')
-# parser.add_argument('version', action = 'store', type = int, help = 'Choose G1 or G2 by num(G1=1, G2=2)')
 parser.add_argument('-p', dest ='currentMOM', action = 'store_true', help = 'Load current MOM by using -p option')
 parser.add_argument('-mo', dest = 'mo', action = 'store', help = 'Search specific mo using -mo option')
 parser.add_argument('-attr', dest = 'attr', action = 'store', help = 'Search specific attr using -attr option')
@@ -335,15 +280,15 @@ parser.add_argument('-diff', dest ='diff', action = 'store_true', help = 'Show d
 parser.add_argument('-a', dest ='mom', action = 'store_true', help = 'Show all information in MOM')
 parser.add_argument('-t', dest ='tree', action = 'store_true', help = 'Show relationship between MOs') 
 args = parser.parse_args()  
-# argParse()
+argParse()
 
 def testcase():
     name = "LteRbsNodeComplete_Itr27_R10D03.xml"
     parser = ParsingMom(name)
-    a = parser.relation()
-#     a = parser.relation(mo='celltdd')
-#     a = parser.relation(mo='uemeascontrol')
-    print a
+#   print parser.relation(mo='cellfdd')
+#   print parser.relation()
+#   print parser.relation(mo='celltdd')
+    print parser.relation(mo='uemeascontrol')
 #     print parser.showMom()
 #     print parser.showMom(mo='nbiot', attr='cell')
 #     print parser.showMom(mo='vzsdfwe')
