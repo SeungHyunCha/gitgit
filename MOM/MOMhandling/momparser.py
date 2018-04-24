@@ -658,6 +658,7 @@ def argParse():
     else:
         if not args.file:
             file = os.popen(Gen1_MOM)
+
         if args.mom:
             parser = ParsingMom(StringIO(file.read()))
             print parser.showMom(args.mo, args.attr)
@@ -672,8 +673,8 @@ def argParse():
 
 parser = argparse.ArgumentParser(description = 'Test MOM handling')
 parser.add_argument('-i', dest ='file', action = 'store', type = argparse.FileType('r'), help = 'If you want to show specific MOM version, input filename by using -i option')
-parser.add_argument(dest = 'mo', action = 'store', help = 'Search specific mo using -mo option')
-parser.add_argument(dest = 'attr', action = 'store', help = 'Search specific attr using -attr option')
+parser.add_argument(dest = 'mo', nargs = '?')
+parser.add_argument(dest = 'attr', nargs = '?')
 parser.add_argument('-d', dest ='description', action = 'store_true', help = 'Show only description about specific mo')
 parser.add_argument('-diff', dest ='diff', action = 'store_true', help = 'Show difference between current MOM xml and prev MOM xml')
 parser.add_argument('-a', dest ='mom', action = 'store_true', help = 'Show all information in MOM')
