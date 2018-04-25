@@ -4,8 +4,7 @@ from cStringIO import StringIO
 # Gen1
 Gen1 = 1
 Gen1_MOM = 'cat $MY_GIT_TOP/mom/lte/complete/LteRbsNodeComplete.xml'
-Gen1_commit = 'git log --oneline $MY_GIT_TOP/mom/lte/complete/LteRbsNodeComplete.xml'
-Gen1_prevMOM = 'git show %s:mom/lte/complete/LteRbsNodeComplete.xml'
+Gen1_specificMOM = 'git show %s:mom/lte/complete/LteRbsNodeComplete.xml'
 # Gen2
 Gen2 = 2
 Gen2_MOM = 'cat $MY_GIT_TOP/mom/lrat/output/Lrat_DWAXE_mp.xml'
@@ -157,7 +156,7 @@ class Mo:
         if self.getFlags():
             show_info += '%s\n' % self.getFlags()
         if self.getDesc():
-            show_info += 'description\t%s\n' % self.getDesc()
+            show_info += '%s\n' % self.getDesc()
         show_info += '%s\n%s%s%s\n%s\n' %(line, "Attribute".ljust(30), "Type".ljust(40), 'Flags', line)
         for key, value in sorted(self.attrs_obj.items()):
             show_info += key.ljust(30) + value.getType().ljust(40) + value.getFlags() + '\n'
@@ -267,7 +266,7 @@ class Attr:
                     self.types = data.getType()
 
         if 'visibility' in self.others:
-            self.flags.append(hidden)
+            self.flags.append('EricssonOnly')
 
 class DataType:
     def __init__(self, attr):
@@ -490,8 +489,8 @@ class ParsingMom(IterParser):
         if mo is None and attr is None:
             for moc in self.sortMO:
                 getMo = self.mos[moc]
-                show_info += '%s\n%s%s\n' %(self.line,"MO = ", getMo.getName())
-                show_info += '%s%s\n'%("description = ".ljust(10), getMo.getDesc())
+                show_info += '%s\n%s\n' %(self.line, getMo.getName())
+                show_info += '%s\n'%(getMo.getDesc())
 
         if mo is not None and attr is None:
             p = re.compile(mo, re.IGNORECASE)
@@ -499,12 +498,8 @@ class ParsingMom(IterParser):
                 check = p.search(moc)
                 if check:
                     getMo = self.mos[moc]
-                    show_info += '%s\n%s%s\n' %(self.line,"MO = ", getMo.getName())
-                    show_info += '%s%s\n'%("description = ".ljust(10), getMo.getDesc())
-                    attr_list = getMo.getAttrs()
-                    for attr_name in sorted(attr_list):
-                        getAttr = attr_list[attr_name]
-                        show_info += '%s\n%s\t%s\n' %(self.line, getAttr.getName(), getAttr.getDesc())
+                    show_info += '%s\n%s\n' %(self.line, getMo.getName())
+                    show_info += '%s\n'%(getMo.getDesc())
 
         if mo is None and attr is not None:
             p = re.compile(attr, re.IGNORECASE)
@@ -512,8 +507,8 @@ class ParsingMom(IterParser):
                 check = p.search(attr_name)
                 if check:
                     getAttr = self.attrs[attr_name]
-                    show_info += '%s\n%s%s\t%s%s\n' %(self.line,"MO = ", getAttr.getMoName(),"ATTR = ", getAttr.getName())
-                    show_info += '%s%s\n'%("description = ".ljust(10), getAttr.getDesc())
+                    show_info += '%s\n%s\t%s\n' %(self.line,getAttr.getMoName(), getAttr.getName())
+                    show_info += '%s\n'%(getAttr.getDesc())
 
         if mo is not None and attr is not None:
             p = re.compile(mo, re.IGNORECASE)
@@ -527,8 +522,8 @@ class ParsingMom(IterParser):
                         check1 = m.search(attr_name)
                         if check1:
                             getAttr = attr_list[attr_name]
-                            show_info += '%s\n%s%s\t%s%s\n' %(self.line,"MO = ", getAttr.getMoName(),"ATTR = ", getAttr.getName())
-                            show_info += '%s%s\n'%("description = ".ljust(10), getAttr.getDesc())
+                            show_info += '%s\n%s\t%s\n' %(self.line, getAttr.getMoName(), getAttr.getName())
+                            show_info += '%s\n'%(getAttr.getDesc())
         return show_info
 
     def findParentTree(self, child, tree_list):
@@ -630,33 +625,55 @@ def diff(prev, cur):
     return diffstr
 
 def argParse():
-    if args.diff:
-        if not args.file:
-            file = os.popen(Gen1_MOM)
-        commit = os.popen(Gen1_commit)
-        prev_commit = commit.readlines()[1]
-        prev_commit = prev_commit.split(' ')[0]
-        read_prev_mom = os.popen(Gen1_prevMOM % prev_commit)
-        prev_mom = open('prevmom','wb')
-        prev_mom.write(read_prev_mom.read())
-        prev_mom.close()
-        prev_mom = open('prevmom','rb')
-        if args.mom:
-            parser1 = ParsingMom(prev_mom)
-            parser2 = ParsingMom(cur_mom)
-            prev_str = parser1.showMom(args.mo, args.attr)
-            cur_str = parser2.showMom(args.mo, args.attr)
-            diff_file =  diff(prev_str, cur_str)
-            print diff_file
-        elif args.description:
-            parser1 = ParsingMom(prev_mom)
-            parser2 = ParsingMom(cur_mom)
-            prev_str = parser1.showDesc(args.mo, args.attr)
-            cur_str = parser2.showDesc(args.mo, args.attr)
-            diff_file =  diff(prev_str, cur_str)
-            print diff_file
+    if args.diff1: # option 1 (-ing)
+        current_mom = os.popen(Gen1_MOM)
+
+    elif args.diff2: # option 2
+        current_mom = os.popen(Gen1_MOM)
+        if args.branch:
+            branch_name = args.branch[0]
+            compared_mom = os.popen(Gen1_specificMOM % branch_name)
+            if args.xml:
+                diff_file = diff(current_mom.read(), compared_mom.read())
+                print diff_file
+            else:
+                cur_parser = ParsingMom(StringIO(current_mom.read()))
+                comp_parser = ParsingMom(StringIO(compared_mom.read()))
+                if args.mom:
+                    cur_str = cur_parser.showMom(args.mo, args.attr)
+                    comp_str = comp_parser.showMom(args.mo, args.attr)
+                    diff_file = diff(comp_str, cur_str)
+                    print diff_file
+                if args.description:
+                    cur_str = cur_parser.showDesc(args.mo, args.attr)
+                    comp_str = comp_parser.showDesc(args.mo, args.attr)
+                    diff_file = diff(comp_str, cur_str)
+                    print diff_file
+        else: print 'input compared branch!' 
+
+    elif args.diff3: # option 3
+        if len(args.branch) == 2:
+            branch_name1 = args.branch[0]
+            branch_name2 = args.branch[1]
+            first_mom = os.popen(Gen1_specificMOM % branch_name1)
+            second_mom = os.popen(Gen1_specificMOM % branch_name2)
+            first_parser = ParsingMom(StringIO(first_mom.read()))
+            second_parser = ParsingMom(StringIO(second_mom.read()))
+            if args.mom:
+                first_str = first_parser.showMom(args.mo, args.attr)
+                second_str = second_parser.showMom(args.mo, args.attr)
+                diff_file = diff(first_str, second_str)
+                print diff_file
+            if args.description:
+                first_str = first_parser.showMom(args.mo, args.attr)
+                second_str = second_parser.showMom(args.mo, args.attr)
+                diff_file = diff(first_str, second_str)
+                print diff_file
+        else:
+            print 'input compared two branch!'
+
     else:
-        if not args.file:
+        if not args.branch:
             file = os.popen(Gen1_MOM)
 
         if args.mom:
@@ -664,20 +681,25 @@ def argParse():
             print parser.showMom(args.mo, args.attr)
 
         if args.description:
-            parser = ParsingMom(cur_mom)
+            parser = ParsingMom(StringIO(file.read()))
             print parser.showDesc(args.mo, args.attr)
 
         if args.tree:
-            parser = ParsingMom(cur_mom)
+            parser = ParsingMom(StringIO(file.read()))
             print parser.relation(args.mo)
 
-parser = argparse.ArgumentParser(description = 'Test MOM handling')
-parser.add_argument('-i', dest ='file', action = 'store', type = argparse.FileType('r'), help = 'If you want to show specific MOM version, input filename by using -i option')
-parser.add_argument(dest = 'mo', nargs = '?')
-parser.add_argument(dest = 'attr', nargs = '?')
-parser.add_argument('-d', dest ='description', action = 'store_true', help = 'Show only description about specific mo')
-parser.add_argument('-diff', dest ='diff', action = 'store_true', help = 'Show difference between current MOM xml and prev MOM xml')
-parser.add_argument('-a', dest ='mom', action = 'store_true', help = 'Show all information in MOM')
-parser.add_argument('-t', dest ='tree', action = 'store_true', help = 'Show relationship between MOs')
-args = parser.parse_args()
-argParse()
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description = 'Test MOM handling')
+    parser.add_argument('-input1', dest ='file1', action = 'store', type = argparse.FileType('r'), help = 'If you want to show specific MOM version, input filename by using -i option')
+    parser.add_argument('-b', dest = 'branch', nargs = '*')
+    parser.add_argument(dest = 'mo', nargs = '?')
+    parser.add_argument(dest = 'attr', nargs = '?')
+    parser.add_argument('-d', dest ='description', action = 'store_true', help = 'Show only description about specific mo')
+    parser.add_argument('-diff1', dest ='diff1', action = 'store_true', help = 'revised file and conventional file in current branch')
+    parser.add_argument('-diff2', dest ='diff2', action = 'store_true', help = 'Show difference between current and compared mom')
+    parser.add_argument('-diff3', dest ='diff3', action = 'store_true', help = 'Show difference between two specipic mom')
+    parser.add_argument('-a', dest ='mom', action = 'store_true', help = 'Show properties of mom')
+    parser.add_argument('-t', dest ='tree', action = 'store_true', help = 'Show relationship between mo classes')
+    parser.add_argument('-x', dest ='xml', action = 'store_true', help = 'Show mom xml file')
+    args = parser.parse_args()
+    argParse()
