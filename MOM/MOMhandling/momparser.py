@@ -1,25 +1,28 @@
 import xml.etree.ElementTree as ET
 import re, argparse, os, difflib
 from cStringIO import StringIO
-# Gen1
-Gen1 = 1
-Gen1_MOM = 'cat $MY_GIT_TOP/mom/lte/complete/LteRbsNodeComplete.xml'
-Gen1_specificMOM = 'git show %s:mom/lte/complete/LteRbsNodeComplete.xml'
-# Gen2
-Gen2 = 2
-Gen2_MOM = 'cat $MY_GIT_TOP/mom/lrat/output/Lrat_DWAXE_mp.xml'
-Gen2_commit = 'git log --oneline $MY_GIT_TOP/mom/lrat/output/Lrat_DWAXE_mp.xml'
-Gen2_prevMOM = 'git show %s:mom/lrat/output/Lrat_DWAXE_mp.xml'
-#etc
-prev = '-'
-modified = '?'
-new = '+'
-red = u"\u001b[31m %s \u001b[0m\n"
-yellow = u"\u001b[33m %s \u001b[0m\n"
-green = u"\u001b[32m %s \u001b[0m\n"
-root = 'ManagedElement'
-ref_to_By = 'reservedBy'
-hidden = 'EricssonOnly'
+
+class Define:
+    # Gen1
+    Gen1 = 1
+    Gen1_MOM = 'cat $MY_GIT_TOP/mom/lte/complete/LteRbsNodeComplete.xml'
+    Gen1_specificMOM = 'git show %s:mom/lte/complete/LteRbsNodeComplete.xml'
+    Gen1_existingMOM = 'git show HEAD:mom/lte/complete/LteRbsNodeComplete.xml'
+    # Gen2
+    Gen2 = 2
+    Gen2_MOM = 'cat $MY_GIT_TOP/mom/lrat/output/Lrat_DWAXE_mp.xml'
+    Gen2_commit = 'git log --oneline $MY_GIT_TOP/mom/lrat/output/Lrat_DWAXE_mp.xml'
+    Gen2_prevMOM = 'git show %s:mom/lrat/output/Lrat_DWAXE_mp.xml'
+    #etc
+    before = '-'
+    modified = '?'
+    new = '+'
+    red = u"\u001b[31m %s \u001b[0m\n"
+    yellow = u"\u001b[33m %s \u001b[0m\n"
+    green = u"\u001b[32m %s \u001b[0m\n"
+    root = 'ManagedElement'
+    ref_to_By = 'reservedBy'
+    hidden = 'EricssonOnly'
 
 class IterParser:
     def __init__(self, name):
@@ -266,7 +269,7 @@ class Attr:
                     self.types = data.getType()
 
         if 'visibility' in self.others:
-            self.flags.append('EricssonOnly')
+            self.flags.append(Define.hidden)
 
 class DataType:
     def __init__(self, attr):
@@ -427,7 +430,7 @@ class Relation:
 class ParsingMom(IterParser):
     def __init__(self, name):
         IterParser.__init__(self, name)
-        self.root = root
+        self.root = Define.root
         self.line = "*" * 132
         self.sortMO = sorted(self.mos.keys())
 
@@ -528,14 +531,14 @@ class ParsingMom(IterParser):
 
     def findParentTree(self, child, tree_list):
         for key, value in self.relations.items():
-            if key[-10:] == ref_to_By: pass
+            if key[-10:] == Define.ref_to_By: pass
             elif child == value.getChildName():
                 parent = value.getParentName()
                 cardi = value.getCaldi()
                 child_cardi = child + cardi
                 tree_list.insert(0, child_cardi)
-                if parent == root:
-                    tree_list.insert(0, root + '[1]')
+                if parent == Define.root:
+                    tree_list.insert(0, parent + '[1]')
                     return tree_list
                 else: return self.findParentTree(parent, tree_list)
             else: pass
@@ -588,12 +591,12 @@ class ParsingMom(IterParser):
         show_info = ''
         if mo == None:
             tree_list = []
-            tree_list.append(root + '[1]')
-            show_info += '%s\n' % self.treeStruct(tree_list, show_info, root)
+            tree_list.append(Define.root + '[1]')
+            show_info += '%s\n' % self.treeStruct(tree_list, show_info, Define.root)
         else:
             p = re.compile(mo, re.IGNORECASE)
             for key, value in self.relations.items():
-                if key[-10:] == ref_to_By: pass
+                if key[-10:] == Define.ref_to_By: pass
                 else:
                     parent_mo = value.getParentName()
                     child_mo = value.getChildName()
@@ -608,98 +611,134 @@ class ParsingMom(IterParser):
                         show_info += '%s\n' % self.treeStruct(tree_list, show_info, child_mo)
         return show_info
 
-def diff(prev, cur):
-    diff = difflib.ndiff(prev.splitlines(), cur.splitlines())
-    diffstr = ''
-    for line in list(diff):
-        if line.split(' ')[0] == prev:
-            diffstr += red % line
-        elif line.split(' ')[0] == modified:
-            diffstr += yellow % line
-        elif line.split(' ')[0] == new:
-            diffstr += green % line
-        else:
-            pass
-            # if you want to add previous mom, please turn on this sentence
-            #diffstr += '%s\n' % line
-    return diffstr
+class ArgParse:
+    def __init__(self):
+        self.args = self.parse_Args()
+        self.branch = self.args.branch
+        self.mo = self.args.mo
+        self.attr = self.args.attr
+        self.description = self.args.description
+        self.mom = self.args.mom
+        self.tree= self.args.tree
+        self.xml= self.args.xml
+        self.diff1 = self.args.diff1
+        self.diff2 = self.args.diff2
+        self.diff3= self.args.diff3
 
-def argParse():
-    if args.diff1: # option 1 (-ing)
-        current_mom = os.popen(Gen1_MOM)
+    def parse_Args(self):
+        parser = argparse.ArgumentParser(description = 'momparser version 0.1')
+        parser.add_argument('-b', dest = 'branch', nargs = '*')
+        parser.add_argument(dest = 'mo', nargs = '?')
+        parser.add_argument(dest = 'attr', nargs = '?')
+        parser.add_argument('-d', dest ='description', action = 'store_true', help = 'Show only description about specific mo')
+        parser.add_argument('-diff1', dest ='diff1', action = 'store_true', help = 'revised mom in current branch')
+        parser.add_argument('-diff2', dest ='diff2', action = 'store_true', help = 'Show difference between current and compared mom')
+        parser.add_argument('-diff3', dest ='diff3', action = 'store_true', help = 'Show difference between two specipic mom')
+        parser.add_argument('-a', dest ='mom', action = 'store_true', help = 'Show properties of mom')
+        parser.add_argument('-t', dest ='tree', action = 'store_true', help = 'Show relationship between mo classes')
+        parser.add_argument('-x', dest ='xml', action = 'store_true', help = 'Show mom xml file')
+        return parser.parse_args()
 
-    elif args.diff2: # option 2
-        current_mom = os.popen(Gen1_MOM)
-        if args.branch:
-            branch_name = args.branch[0]
-            compared_mom = os.popen(Gen1_specificMOM % branch_name)
-            if args.xml:
-                diff_file = diff(current_mom.read(), compared_mom.read())
+    def diff_func(self, prev, cur):
+        diff = difflib.ndiff(prev.splitlines(), cur.splitlines())
+        diffstr = ''
+        for line in list(diff):
+            if line.split(' ')[0] == Define.before:
+                diffstr += Define.red % line
+            elif line.split(' ')[0] == Define.modified:
+                diffstr += Define.yellow % line
+            elif line.split(' ')[0] == Define.new:
+                diffstr += Define.green % line
+            else:
+                pass
+        return diffstr
+
+    def printMom(self):
+        if self.diff1:
+            current_mom = os.popen(Define.Gen1_MOM)
+            existing_mom = os.popen(Define.Gen1_existingMOM)
+            if self.xml:
+                diff_file = self.diff_func(existing_mom, current_mom)
                 print diff_file
             else:
-                cur_parser = ParsingMom(StringIO(current_mom.read()))
-                comp_parser = ParsingMom(StringIO(compared_mom.read()))
-                if args.mom:
-                    cur_str = cur_parser.showMom(args.mo, args.attr)
-                    comp_str = comp_parser.showMom(args.mo, args.attr)
-                    diff_file = diff(comp_str, cur_str)
+                existing_parser = ParsingMom(StringIO(existing_mom.read()))
+                current_parser = ParsingMom(StringIO(current_mom.read()))
+                if self.mom:
+                    existing_str = existing_parser.showMom(self.mo, self.attr)
+                    current_str = current_parser.showMom(self.mo, self.attr)
+                    diff_file = self.diff_func(existing_str, current_str)
                     print diff_file
-                if args.description:
-                    cur_str = cur_parser.showDesc(args.mo, args.attr)
-                    comp_str = comp_parser.showDesc(args.mo, args.attr)
-                    diff_file = diff(comp_str, cur_str)
-                    print diff_file
-        else: print 'input compared branch!' 
 
-    elif args.diff3: # option 3
-        if len(args.branch) == 2:
-            branch_name1 = args.branch[0]
-            branch_name2 = args.branch[1]
-            first_mom = os.popen(Gen1_specificMOM % branch_name1)
-            second_mom = os.popen(Gen1_specificMOM % branch_name2)
-            first_parser = ParsingMom(StringIO(first_mom.read()))
-            second_parser = ParsingMom(StringIO(second_mom.read()))
-            if args.mom:
-                first_str = first_parser.showMom(args.mo, args.attr)
-                second_str = second_parser.showMom(args.mo, args.attr)
-                diff_file = diff(first_str, second_str)
-                print diff_file
-            if args.description:
-                first_str = first_parser.showMom(args.mo, args.attr)
-                second_str = second_parser.showMom(args.mo, args.attr)
-                diff_file = diff(first_str, second_str)
-                print diff_file
+                if self.description:
+                    existing_str = existing_parser.showDesc(self.mo, self.attr)
+                    current_str = current_parser.showDesc(self.mo, self.attr)
+                    diff_file = self.diff_func(existing_str, current_str)
+                    print diff_file
+
+        elif self.diff2:
+            current_mom = os.popen(Define.Gen1_MOM)
+            if self.branch:
+                branch_name = self.branch[0]
+                compared_mom = os.popen(Define.Gen1_specificMOM % branch_name)
+                if self.xml:
+                    diff_file = self.diff_func(compared_mom.read(), current_mom.read())
+                    print diff_file
+                else:
+                    compared_parser = ParsingMom(StringIO(compared_mom.read()))
+                    current_parser = ParsingMom(StringIO(current_mom.read()))
+                    if self.mom:
+                        compared_str = compared_parser.showMom(self.mo, self.attr)
+                        current_str = current_parser.showMom(self.mo, self.attr)
+                        diff_file = self.diff_func(compared_str, current_str)
+                        print diff_file
+
+                    if self.description:
+                        compared_str = compared_parser.showDesc(self.mo, self.attr)
+                        current_str = current_parser.showDesc(self.mo, self.attr)
+                        diff_file = self.diff_func(compared_str, current_str)
+                        print diff_file
+            else: print 'input compared branch!' 
+
+        elif self.diff3:
+            if len(self.branch) == 2:
+                branch_name1 = self.branch[0]; branch_name2 = self.branch[1]
+                first_mom = os.popen(Define.Gen1_specificMOM % branch_name1)
+                second_mom = os.popen(Define.Gen1_specificMOM % branch_name2)
+                first_parser = ParsingMom(StringIO(first_mom.read()))
+                second_parser = ParsingMom(StringIO(second_mom.read()))
+                if self.mom:
+                    first_str = first_parser.showMom(self.mo, self.attr)
+                    second_str = second_parser.showMom(self.mo, self.attr)
+                    diff_file = self.diff_func(first_str, second_str)
+                    print diff_file
+
+                if self.description:
+                    first_str = first_parser.showMom(self.mo, self.attr)
+                    second_str = second_parser.showMom(self.mo, self.attr)
+                    diff_file = self.diff_func(first_str, second_str)
+                    print diff_file
+            else:
+                print 'input compared two branches!'
+
         else:
-            print 'input compared two branch!'
+            if not self.branch:
+                current_mom = os.popen(Define.Gen1_MOM)
+            else:
+                branch_name = self.branch[0]
+                current_mom = os.popen(Define.Gen1_specificMOM % branch_name)
 
-    else:
-        if not args.branch:
-            file = os.popen(Gen1_MOM)
+            if self.mom:
+                parser = ParsingMom(StringIO(current_mom.read()))
+                print parser.showMom(self.mo, self.attr)
 
-        if args.mom:
-            parser = ParsingMom(StringIO(file.read()))
-            print parser.showMom(args.mo, args.attr)
+            if self.description:
+                parser = ParsingMom(StringIO(current_mom.read()))
+                print parser.showDesc(self.mo, self.attr)
 
-        if args.description:
-            parser = ParsingMom(StringIO(file.read()))
-            print parser.showDesc(args.mo, args.attr)
-
-        if args.tree:
-            parser = ParsingMom(StringIO(file.read()))
-            print parser.relation(args.mo)
+            if self.tree:
+                parser = ParsingMom(StringIO(current_mom.read()))
+                print parser.relation(self.mo)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description = 'Test MOM handling')
-    parser.add_argument('-input1', dest ='file1', action = 'store', type = argparse.FileType('r'), help = 'If you want to show specific MOM version, input filename by using -i option')
-    parser.add_argument('-b', dest = 'branch', nargs = '*')
-    parser.add_argument(dest = 'mo', nargs = '?')
-    parser.add_argument(dest = 'attr', nargs = '?')
-    parser.add_argument('-d', dest ='description', action = 'store_true', help = 'Show only description about specific mo')
-    parser.add_argument('-diff1', dest ='diff1', action = 'store_true', help = 'revised file and conventional file in current branch')
-    parser.add_argument('-diff2', dest ='diff2', action = 'store_true', help = 'Show difference between current and compared mom')
-    parser.add_argument('-diff3', dest ='diff3', action = 'store_true', help = 'Show difference between two specipic mom')
-    parser.add_argument('-a', dest ='mom', action = 'store_true', help = 'Show properties of mom')
-    parser.add_argument('-t', dest ='tree', action = 'store_true', help = 'Show relationship between mo classes')
-    parser.add_argument('-x', dest ='xml', action = 'store_true', help = 'Show mom xml file')
-    args = parser.parse_args()
-    argParse()
+    parser = ArgParse()
+    parser.printMom()

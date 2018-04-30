@@ -31,7 +31,7 @@ print '\n'
 print '\n'
 diff = difflib.ndiff(text1_lines, text2_lines)
 print '\n'.join(list(diff))
-print '\n'
-print '\n'
-diff = difflib.unified_diff(text1_lines, text2_lines, lineterm='')
-print '\n'.join(list(diff))
+# print '\n'
+# print '\n'
+# diff = difflib.unified_diff(text1_lines, text2_lines, lineterm='')
+# print '\n'.join(list(diff))
