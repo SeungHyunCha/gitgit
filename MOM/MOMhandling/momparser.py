@@ -1,6 +1,7 @@
 import xml.etree.ElementTree as ET
 import re, argparse, os, difflib
 from cStringIO import StringIO
+from argparse import RawTextHelpFormatter
 
 class Define:
     # Gen1
@@ -624,16 +625,57 @@ class ArgParse:
         self.diff1 = self.args.diff1
         self.diff2 = self.args.diff2
         self.diff3= self.args.diff3
+    
+    def parseDesc(self):
+        str = """momparser version 0.1
+        examples:
+        1. View the whole mom information
+        >> mom
+        2. List all attributes(including type,flags) under the NbIotCell MO
+        >> mom nbiot
+        3. List all properties of attributes under the NbIotCell MO
+        >> mom nbiot .
+        4. List properties of specific attributes related to zzzTemporary under the NbIotCell MO
+        >> mom nbiot zzz
+        5. View the all description of MO
+        >> momd
+        6. View the specific MO's description
+        >> momd nbiot
+        7. List description of all attributes under the NbIotCell MO
+        >> momd nbiot .
+        8. List description of specific attributes(zzzTemporary) under the NbIotCell MO
+        >> momd nbiot zzz
+        9. View the whole MO tree
+        >> momt 
+        10. View all posibble parents and children of the NbIotCell MO
+        >> momt nbiot
+        11. View MOM's difference between the modified mom and before mom related to number 1
+        >> mom(d) -g
+        >> mom(d) -g nbiot
+        >> mom(d) -g nbiot .
+        >> mom(d) -g nbiot zzz
+        12. View MOM's diffrence between the specific branch and the current branch
+        >> mom(d) -m feat/lrat_mom_normal_r11a
+        >> mom(d) -m feat/lrat_mom_normal_r11a nbiot
+        >> mom(d) -m feat/lrat_mom_normal_r11a nbiot .
+        >> mom(d) -m feat/lrat_mom_normal_r11a nbiot zzz
+        13. View MOM's diffrence between the specific branches
+        >> mom(d) -n feat/lrat_mom_normal_r10e feat/lrat_mom_normal_r11a
+        >> mom(d) -n feat/lrat_mom_normal_r10e feat/lrat_mom_normal_r11a nbiot
+        >> mom(d) -n feat/lrat_mom_normal_r10e feat/lrat_mom_normal_r11a nbiot .
+        >> mom(d) -n feat/lrat_mom_normal_r10e feat/lrat_mom_normal_r11a nbiot zzz
+        """
+        return str
 
     def parse_Args(self):
-        parser = argparse.ArgumentParser(description = 'momparser version 0.1')
+        parser = argparse.ArgumentParser(description = self.parseDesc(), formatter_class=RawTextHelpFormatter)
         parser.add_argument('-b', dest = 'branch', nargs = '*')
         parser.add_argument(dest = 'mo', nargs = '?')
         parser.add_argument(dest = 'attr', nargs = '?')
         parser.add_argument('-d', dest ='description', action = 'store_true', help = 'Show only description about specific mo')
-        parser.add_argument('-diff1', dest ='diff1', action = 'store_true', help = 'revised mom in current branch')
-        parser.add_argument('-diff2', dest ='diff2', action = 'store_true', help = 'Show difference between current and compared mom')
-        parser.add_argument('-diff3', dest ='diff3', action = 'store_true', help = 'Show difference between two specipic mom')
+        parser.add_argument('-g', dest ='diff1', action = 'store_true', help = 'revised mom in current branch')
+        parser.add_argument('-m', dest ='diff2', action = 'store_true', help = 'Show difference between current and compared mom')
+        parser.add_argument('-n', dest ='diff3', action = 'store_true', help = 'Show difference between two specipic mom')
         parser.add_argument('-a', dest ='mom', action = 'store_true', help = 'Show properties of mom')
         parser.add_argument('-t', dest ='tree', action = 'store_true', help = 'Show relationship between mo classes')
         parser.add_argument('-x', dest ='xml', action = 'store_true', help = 'Show mom xml file')
@@ -658,7 +700,7 @@ class ArgParse:
             current_mom = os.popen(Define.Gen1_MOM)
             existing_mom = os.popen(Define.Gen1_existingMOM)
             if self.xml:
-                diff_file = self.diff_func(existing_mom, current_mom)
+                diff_file = self.diff_func(existing_mom.read(), current_mom.read())
                 print diff_file
             else:
                 existing_parser = ParsingMom(StringIO(existing_mom.read()))
@@ -697,7 +739,7 @@ class ArgParse:
                         current_str = current_parser.showDesc(self.mo, self.attr)
                         diff_file = self.diff_func(compared_str, current_str)
                         print diff_file
-            else: print 'input compared branch!' 
+            else: print 'input compared branch!'
 
         elif self.diff3:
             if len(self.branch) == 2:
